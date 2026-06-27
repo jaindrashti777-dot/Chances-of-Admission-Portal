@@ -1,0 +1,147 @@
+# ==============================================================================
+# Chance of Admission Prediction (India) — Configuration
+# ==============================================================================
+# All tunable parameters in one place. No hardcoding anywhere in the codebase.
+# ==============================================================================
+
+project:
+  name: "Chance of Admission Prediction (India)"
+  version: "1.0.0"
+  description: "Production-grade ML system to predict college admission probability"
+  random_state: 42
+
+# --- Data Paths ---------------------------------------------------------------
+data:
+  raw_path: "data/raw/admission_data.csv"
+  processed_path: "data/processed/admission_cleaned.csv"
+  predictions_log: "reports/predictions.csv"
+  test_size: 0.15
+  val_size: 0.15
+  random_state: 42
+  n_samples: 5000
+
+# --- Feature Definitions ------------------------------------------------------
+features:
+  numerical:
+    - Tenth_Percentage
+    - Twelfth_Percentage
+    - JEE_Percentile
+    - CUET_Score
+    - Family_Income
+    - CGPA
+    - Gap_Year
+    - Backlogs
+    - Research_Paper
+    - Internship
+  categorical:
+    - Category
+    - State
+    - Gender
+    - Desired_Branch
+  ordinal:
+    College_Tier:
+      - Tier_3
+      - Tier_2
+      - Tier_1
+  binary:
+    - Extracurricular
+  target: Admission_Chance
+
+# --- Validation Rules ---------------------------------------------------------
+validation:
+  Tenth_Percentage:    { min: 0, max: 100, type: float }
+  Twelfth_Percentage:  { min: 0, max: 100, type: float }
+  JEE_Percentile:      { min: 0, max: 100, type: float }
+  CUET_Score:          { min: 0, max: 800, type: float }
+  Family_Income:       { min: 0, max: 200, type: float }
+  CGPA:                { min: 0, max: 10,  type: float }
+  Gap_Year:            { min: 0, max: 5,   type: int }
+  Backlogs:            { min: 0, max: 50,  type: int }
+  Research_Paper:      { min: 0, max: 20,  type: int }
+  Internship:          { min: 0, max: 10,  type: int }
+  Extracurricular:     { min: 0, max: 1,   type: int }
+
+  valid_categories: ["General", "OBC", "SC", "ST", "EWS"]
+  valid_genders: ["Male", "Female"]
+  valid_tiers: ["Tier_1", "Tier_2", "Tier_3"]
+  valid_branches: ["CSE", "ECE", "ME", "CE", "EE", "IT", "Chemical", "Biotech"]
+  valid_states:
+    - Maharashtra
+    - Delhi
+    - Karnataka
+    - Tamil_Nadu
+    - Uttar_Pradesh
+    - West_Bengal
+    - Rajasthan
+    - Gujarat
+    - Telangana
+    - Kerala
+
+# --- Model Hyperparameter Grids -----------------------------------------------
+models:
+  linear_regression: {}
+
+  decision_tree:
+    max_depth: [3, 5, 10, 15, null]
+    min_samples_split: [2, 5, 10]
+    min_samples_leaf: [1, 2, 5]
+
+  random_forest:
+    n_estimators: [100, 200, 500]
+    max_depth: [5, 10, 15, null]
+    min_samples_split: [2, 5, 10]
+    min_samples_leaf: [1, 2, 5]
+
+  gradient_boosting:
+    n_estimators: [100, 200, 500]
+    max_depth: [3, 5, 7]
+    learning_rate: [0.01, 0.05, 0.1]
+    subsample: [0.8, 1.0]
+
+  xgboost:
+    n_estimators: [100, 200, 500]
+    max_depth: [3, 5, 7]
+    learning_rate: [0.01, 0.05, 0.1]
+    subsample: [0.8, 1.0]
+    colsample_bytree: [0.8, 1.0]
+
+  lightgbm:
+    n_estimators: [100, 200, 500]
+    num_leaves: [15, 31, 63]
+    learning_rate: [0.01, 0.05, 0.1]
+    subsample: [0.8, 1.0]
+
+  catboost:
+    iterations: [100, 200, 500]
+    depth: [4, 6, 8]
+    learning_rate: [0.01, 0.05, 0.1]
+
+# --- Logging ------------------------------------------------------------------
+logging:
+  level: INFO
+  format: "%(asctime)s | %(name)s | %(levelname)s | %(message)s"
+  training_log: "logs/training.log"
+  prediction_log: "logs/prediction.log"
+  max_bytes: 5242880  # 5 MB
+  backup_count: 3
+
+# --- MLflow -------------------------------------------------------------------
+mlflow:
+  experiment_name: "admission_prediction"
+  tracking_uri: "mlruns"
+
+# --- Report Paths -------------------------------------------------------------
+reports:
+  figures_dir: "reports/figures"
+  feature_importance: "reports/figures/feature_importance.png"
+  correlation_heatmap: "reports/figures/correlation_heatmap.png"
+  actual_vs_predicted: "reports/figures/actual_vs_predicted.png"
+  residual_plot: "reports/figures/residual_plot.png"
+  model_comparison: "reports/figures/model_comparison.png"
+  shap_summary: "reports/figures/shap_summary.png"
+
+# --- Model Paths --------------------------------------------------------------
+model_paths:
+  best_model: "models/best_model.pkl"
+  pipeline: "models/pipeline.pkl"
+  scaler: "models/scaler.pkl"

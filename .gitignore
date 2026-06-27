@@ -1,0 +1,44 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+
+# Models (large binary files)
+models/*.pkl
+
+# Logs
+logs/*.log
+
+# MLflow
+mlruns/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Predictions history (can grow large)
+reports/predictions.csv
+
+# Environment variables
+.env
