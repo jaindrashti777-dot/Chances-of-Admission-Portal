@@ -7,7 +7,6 @@ Every other module imports paths, feature lists, and hyperparameters from here.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Any
 

@@ -8,12 +8,11 @@ logs every prediction to a CSV history file.
 from __future__ import annotations
 
 import datetime
-from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
-from src.config import resolve_path, load_config
+from src.config import load_config, resolve_path
 from src.logger import get_prediction_logger
 from src.utils import load_pickle
 from src.validator import validate_single_input

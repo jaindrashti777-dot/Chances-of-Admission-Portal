@@ -66,7 +66,9 @@ class CustomException(Exception):
             sys module to extract traceback.
         """
         super().__init__(str(error_message))
-        self.error_message = error_message_detail(error_message, error_detail=error_detail)
+        self.error_message = error_message_detail(
+            error_message, error_detail=error_detail
+        )
         logger.error(self.error_message)
 
     def __str__(self) -> str:

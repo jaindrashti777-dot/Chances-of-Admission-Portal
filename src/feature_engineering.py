@@ -7,7 +7,6 @@ Follows the ML best practice: split BEFORE fitting any transformers.
 
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -23,8 +22,7 @@ def split_data(
     test_size: float = 0.15,
     val_size: float = 0.15,
     random_state: int | None = None,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame,
-           pd.Series, pd.Series, pd.Series]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.Series, pd.Series, pd.Series]:
     """
     Split data into train, validation, and test sets.
 
@@ -64,13 +62,19 @@ def split_data(
 
         # First split: train+val vs test
         X_train_val, X_test, y_train_val, y_test = train_test_split(
-            X, y, test_size=test_size, random_state=seed,
+            X,
+            y,
+            test_size=test_size,
+            random_state=seed,
         )
 
         # Second split: train vs val (from train+val)
         val_fraction = val_size / (1 - test_size)
         X_train, X_val, y_train, y_val = train_test_split(
-            X_train_val, y_train_val, test_size=val_fraction, random_state=seed,
+            X_train_val,
+            y_train_val,
+            test_size=val_fraction,
+            random_state=seed,
         )
 
         logger.info(

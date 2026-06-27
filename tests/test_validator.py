@@ -5,11 +5,7 @@ Unit tests for data validation layer.
 import pandas as pd
 import pytest
 
-from src.validator import (
-    ValidationError,
-    validate_dataframe,
-    validate_single_input,
-)
+from src.validator import validate_dataframe, validate_single_input
 
 
 @pytest.fixture

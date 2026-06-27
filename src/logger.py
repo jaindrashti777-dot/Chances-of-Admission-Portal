@@ -63,19 +63,22 @@ def get_logger(
 
     # File handler — only if log_file is provided
     if log_file:
-        log_dir = os.path.dirname(log_file)
-        if log_dir:
-            Path(log_dir).mkdir(parents=True, exist_ok=True)
+        try:
+            log_dir = os.path.dirname(log_file)
+            if log_dir:
+                Path(log_dir).mkdir(parents=True, exist_ok=True)
 
-        file_handler = RotatingFileHandler(
-            log_file,
-            maxBytes=max_bytes,
-            backupCount=backup_count,
-            encoding="utf-8",
-        )
-        file_handler.setLevel(level)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
+            file_handler = RotatingFileHandler(
+                log_file,
+                maxBytes=max_bytes,
+                backupCount=backup_count,
+                encoding="utf-8",
+            )
+            file_handler.setLevel(level)
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+        except OSError as e:
+            logger.warning("File logging disabled for %s: %s", log_file, e)
 
     return logger
 

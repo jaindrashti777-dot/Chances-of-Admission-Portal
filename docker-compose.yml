@@ -6,6 +6,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      # Run `make generate && make train` before starting containers.
+      - ./data:/app/data
       - ./models:/app/models
       - ./logs:/app/logs
       - ./reports:/app/reports
@@ -18,6 +20,8 @@ services:
     ports:
       - "8501:8501"
     volumes:
+      # Run `make generate && make train` before starting containers.
+      - ./data:/app/data
       - ./models:/app/models
       - ./logs:/app/logs
       - ./reports:/app/reports

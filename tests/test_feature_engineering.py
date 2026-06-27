@@ -4,7 +4,6 @@ Unit tests for feature engineering module.
 
 import pandas as pd
 import pytest
-from sklearn.pipeline import Pipeline
 
 from src.feature_engineering import split_data
 from src.pipeline_builder import build_preprocessor
@@ -12,25 +11,27 @@ from src.pipeline_builder import build_preprocessor
 
 @pytest.fixture
 def sample_data():
-    return pd.DataFrame({
-        "Tenth_Percentage": [80] * 100,
-        "Twelfth_Percentage": [85] * 100,
-        "JEE_Percentile": [90] * 100,
-        "CUET_Score": [600] * 100,
-        "Category": ["General"] * 100,
-        "State": ["Maharashtra"] * 100,
-        "Family_Income": [8] * 100,
-        "Gender": ["Male"] * 100,
-        "Gap_Year": [0] * 100,
-        "CGPA": [8.5] * 100,
-        "Backlogs": [0] * 100,
-        "Extracurricular": [1] * 100,
-        "Research_Paper": [1] * 100,
-        "Internship": [1] * 100,
-        "Desired_Branch": ["CSE"] * 100,
-        "College_Tier": ["Tier_1"] * 100,
-        "Admission_Chance": [0.85] * 100,
-    })
+    return pd.DataFrame(
+        {
+            "Tenth_Percentage": [80] * 100,
+            "Twelfth_Percentage": [85] * 100,
+            "JEE_Percentile": [90] * 100,
+            "CUET_Score": [600] * 100,
+            "Category": ["General"] * 100,
+            "State": ["Maharashtra"] * 100,
+            "Family_Income": [8] * 100,
+            "Gender": ["Male"] * 100,
+            "Gap_Year": [0] * 100,
+            "CGPA": [8.5] * 100,
+            "Backlogs": [0] * 100,
+            "Extracurricular": [1] * 100,
+            "Research_Paper": [1] * 100,
+            "Internship": [1] * 100,
+            "Desired_Branch": ["CSE"] * 100,
+            "College_Tier": ["Tier_1"] * 100,
+            "Admission_Chance": [0.85] * 100,
+        }
+    )
 
 
 def test_split_data(sample_data):

@@ -41,9 +41,7 @@ def build_preprocessor() -> ColumnTransformer:
     logger.info(f"  Ordinal ({len(features['ordinal'])}): {features['ordinal']}")
     logger.info(f"  Binary ({len(features['binary'])}): {features['binary']}")
 
-    numerical_transformer = Pipeline(
-        steps=[("scaler", StandardScaler())]
-    )
+    numerical_transformer = Pipeline(steps=[("scaler", StandardScaler())])
 
     categorical_transformer = Pipeline(
         steps=[

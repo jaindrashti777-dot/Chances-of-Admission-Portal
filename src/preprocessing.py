@@ -51,10 +51,7 @@ def check_data_quality(df: pd.DataFrame) -> dict:
         report["null_percentage"] = null_pct[null_pct > 0].to_dict()
 
         if null_counts.sum() > 0:
-            logger.warning(
-                f"Missing values found:\n"
-                f"{null_counts[null_counts > 0]}"
-            )
+            logger.warning(f"Missing values found:\n" f"{null_counts[null_counts > 0]}")
         else:
             logger.info("No missing values found")
 
@@ -247,8 +244,11 @@ def fix_dtypes(df: pd.DataFrame) -> pd.DataFrame:
     try:
         # Integer columns that might have been read as float
         int_columns = [
-            "Gap_Year", "Backlogs", "Research_Paper",
-            "Internship", "Extracurricular",
+            "Gap_Year",
+            "Backlogs",
+            "Research_Paper",
+            "Internship",
+            "Extracurricular",
         ]
         for col in int_columns:
             if col in df.columns:
@@ -294,8 +294,12 @@ def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
 
         # Only apply outlier capping to academic score columns, not binary/count cols
         outlier_cols = [
-            "Tenth_Percentage", "Twelfth_Percentage", "JEE_Percentile",
-            "CUET_Score", "CGPA", "Family_Income",
+            "Tenth_Percentage",
+            "Twelfth_Percentage",
+            "JEE_Percentile",
+            "CUET_Score",
+            "CGPA",
+            "Family_Income",
         ]
         df = handle_outliers(df, columns=outlier_cols)
 

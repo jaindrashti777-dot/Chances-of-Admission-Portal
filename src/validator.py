@@ -206,8 +206,7 @@ def validate_single_input(input_dict: dict[str, Any]) -> tuple[bool, list[str]]:
             continue
         if val < rules["min"] or val > rules["max"]:
             errors.append(
-                f"{col}: value {val} out of range "
-                f"[{rules['min']}, {rules['max']}]"
+                f"{col}: value {val} out of range " f"[{rules['min']}, {rules['max']}]"
             )
 
     # Validate categorical values

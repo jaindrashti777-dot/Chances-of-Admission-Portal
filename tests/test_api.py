@@ -3,8 +3,8 @@ Unit tests for the FastAPI application.
 """
 
 from unittest.mock import MagicMock, patch
-import pytest
 
+import pytest
 from fastapi.testclient import TestClient
 
 from api.main import app
@@ -54,7 +54,9 @@ def test_predict_endpoint_success(valid_payload):
                 "timestamp": "2023-01-01T12:00:00",
             }
             # We mock the explain module since it's optional
-            with patch("src.explain.explain_prediction", side_effect=Exception("No SHAP")):
+            with patch(
+                "src.explain.explain_prediction", side_effect=Exception("No SHAP")
+            ):
                 response = client.post("/predict", json=valid_payload)
 
             assert response.status_code == 200

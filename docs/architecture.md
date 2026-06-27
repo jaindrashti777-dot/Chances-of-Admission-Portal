@@ -1,29 +1,29 @@
-# Chance of Admission Prediction — System Architecture
+# Chance of Admission Prediction - System Architecture
 
 ```mermaid
 graph TD
-    A[👤 User] -->|Inputs details| B[🌐 Streamlit Dashboard / FastAPI]
-    
+    A[User] -->|Inputs details| B[Streamlit Dashboard / FastAPI]
+
     subgraph Data Pipeline
-        B --> C[✅ Input Validation<br><i>(validator.py)</i>]
-        C --> D[🔧 Preprocessing<br><i>(missing values, outliers)</i>]
-        D --> E[⚙️ Feature Engineering<br><i>(encode, scale, split)</i>]
+        B --> C[Input Validation<br><i>validator.py</i>]
+        C --> D[Preprocessing<br><i>missing values and outliers</i>]
+        D --> E[Feature Engineering<br><i>encode, scale, split</i>]
     end
-    
+
     subgraph Machine Learning
-        E --> F[📦 sklearn Pipeline<br><i>(ColumnTransformer)</i>]
-        F --> G[🤖 Best Model<br><i>(XGBoost/LightGBM)</i>]
-        G --> H[📊 Prediction]
+        E --> F[sklearn Pipeline<br><i>ColumnTransformer</i>]
+        F --> G[Best Model<br><i>XGBoost/LightGBM/etc.</i>]
+        G --> H[Prediction]
     end
-    
-    subgraph Explainability & Logging
-        H --> I[📝 Prediction History<br><i>(predictions.csv)</i>]
-        H --> J[🔍 SHAP Explanation<br><i>(explain.py)</i>]
-        J --> K[🎯 Result Display]
+
+    subgraph Explainability And Logging
+        H --> I[Prediction History<br><i>predictions.csv</i>]
+        H --> J[SHAP Explanation<br><i>explain.py</i>]
+        J --> K[Result Display]
     end
-    
+
     subgraph Experiment Tracking
-        L[🧠 MLflow] -.->|Tracks| F
+        L[MLflow] -.->|Tracks| F
         L -.->|Tracks| G
     end
 
@@ -40,9 +40,14 @@ graph TD
 
 ## Flow Description
 
-1. **User Input:** A user inputs their academic and demographic profile either through the Streamlit web dashboard or the FastAPI REST endpoints.
-2. **Validation Layer:** Inputs are strictly validated against rules defined in `validator.py` and `config.yaml`.
-3. **Pipeline Transformation:** A saved scikit-learn `Pipeline` (with a `ColumnTransformer`) correctly scales numerical features and encodes categorical/ordinal features.
-4. **Model Inference:** The best performing ensemble model predicts the probability of admission.
-5. **Explainability:** SHAP values are calculated on-the-fly to explain *why* the prediction was made (e.g., "CGPA boosted chances by 18%").
-6. **Logging:** The input and prediction are appended to `predictions.csv` for audit trails and monitoring.
+1. A user enters an academic and demographic profile through Streamlit or the
+   FastAPI REST endpoint.
+2. Inputs are validated against rules in `src/validator.py`.
+3. A saved scikit-learn pipeline scales numerical features and encodes
+   categorical, ordinal, and binary features.
+4. The trained regression model predicts admission probability.
+5. Optional SHAP values explain the most influential transformed features.
+6. Input and prediction metadata are appended to `reports/predictions.csv`.
+
+This architecture is designed for a synthetic-data demonstration project. It is
+not a real admissions decision system.

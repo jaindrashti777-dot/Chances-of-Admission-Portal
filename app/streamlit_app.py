@@ -18,13 +18,12 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-import streamlit as st
 import pandas as pd
-import numpy as np
+import streamlit as st
 
 st.set_page_config(
-    page_title="🎓 College Admission Predictor (India)",
-    page_icon="🎓",
+    page_title="College Admission Predictor (India)",
+    page_icon="CA",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -33,7 +32,8 @@ st.set_page_config(
 # Custom CSS — Premium dark gradient theme
 # ==============================================================================
 
-st.markdown("""
+st.markdown(
+    """
 <style>
     /* --- Main container --- */
     .stApp {
@@ -156,32 +156,38 @@ st.markdown("""
         animation: fadeIn 0.6s ease-out;
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
 # ==============================================================================
 # Helper functions
 # ==============================================================================
 
+
 @st.cache_resource
 def load_model_pipeline():
     """Load the trained pipeline (cached)."""
     try:
         from src.predict import load_pipeline
+
         return load_pipeline()
     except Exception as e:
-        st.error(f"⚠️ Model not found. Please run training first: `make train`\n\nError: {e}")
+        st.error(
+            f"Model not found. Please run training first: `make train`\n\nError: {e}"
+        )
         return None
 
 
 def get_color_class(chance: float) -> tuple[str, str, str]:
     """Return (css_class, color_hex, emoji) based on admission chance."""
     if chance >= 0.70:
-        return "result-high", "#00e676", "🟢"
+        return "result-high", "#00e676", "[HIGH]"
     elif chance >= 0.40:
-        return "result-medium", "#ffab00", "🟡"
+        return "result-medium", "#ffab00", "[MED]"
     else:
-        return "result-low", "#ff1744", "🔴"
+        return "result-low", "#ff1744", "[LOW]"
 
 
 # ==============================================================================
@@ -189,53 +195,76 @@ def get_color_class(chance: float) -> tuple[str, str, str]:
 # ==============================================================================
 
 with st.sidebar:
-    st.markdown("## 📋 Student Profile")
+    st.markdown("## Student Profile")
     st.markdown("---")
 
     # Academic Scores
-    st.markdown("### 📚 Academic Scores")
+    st.markdown("### Academic Scores")
     tenth = st.slider(
-        "10th Percentage", min_value=0.0, max_value=100.0,
-        value=75.0, step=0.5, key="tenth"
+        "10th Percentage",
+        min_value=0.0,
+        max_value=100.0,
+        value=75.0,
+        step=0.5,
+        key="tenth",
     )
     twelfth = st.slider(
-        "12th Percentage", min_value=0.0, max_value=100.0,
-        value=78.0, step=0.5, key="twelfth"
+        "12th Percentage",
+        min_value=0.0,
+        max_value=100.0,
+        value=78.0,
+        step=0.5,
+        key="twelfth",
     )
     jee = st.slider(
-        "JEE Percentile", min_value=0.0, max_value=100.0,
-        value=85.0, step=0.1, key="jee"
+        "JEE Percentile",
+        min_value=0.0,
+        max_value=100.0,
+        value=85.0,
+        step=0.1,
+        key="jee",
     )
     cuet = st.number_input(
-        "CUET Score", min_value=0, max_value=800,
-        value=550, step=10, key="cuet"
+        "CUET Score", min_value=0, max_value=800, value=550, step=10, key="cuet"
     )
     cgpa = st.slider(
-        "CGPA", min_value=0.0, max_value=10.0,
-        value=8.0, step=0.1, key="cgpa"
+        "CGPA", min_value=0.0, max_value=10.0, value=8.0, step=0.1, key="cgpa"
     )
 
     st.markdown("---")
-    st.markdown("### 👤 Personal Details")
+    st.markdown("### Personal Details")
     gender = st.selectbox("Gender", ["Male", "Female"], key="gender")
     category = st.selectbox(
         "Category", ["General", "OBC", "SC", "ST", "EWS"], key="category"
     )
     state = st.selectbox(
         "State",
-        ["Maharashtra", "Delhi", "Karnataka", "Tamil_Nadu",
-         "Uttar_Pradesh", "West_Bengal", "Rajasthan", "Gujarat",
-         "Telangana", "Kerala"],
+        [
+            "Maharashtra",
+            "Delhi",
+            "Karnataka",
+            "Tamil_Nadu",
+            "Uttar_Pradesh",
+            "West_Bengal",
+            "Rajasthan",
+            "Gujarat",
+            "Telangana",
+            "Kerala",
+        ],
         key="state",
     )
     income = st.number_input(
-        "Family Income (Lakhs/year)", min_value=0.1, max_value=200.0,
-        value=8.0, step=0.5, key="income"
+        "Family Income (Lakhs/year)",
+        min_value=0.1,
+        max_value=200.0,
+        value=8.0,
+        step=0.5,
+        key="income",
     )
     gap = st.selectbox("Gap Year(s)", [0, 1, 2], key="gap")
 
     st.markdown("---")
-    st.markdown("### 🎯 College Preferences")
+    st.markdown("### College Preferences")
     branch = st.selectbox(
         "Desired Branch",
         ["CSE", "ECE", "ME", "CE", "EE", "IT", "Chemical", "Biotech"],
@@ -245,27 +274,24 @@ with st.sidebar:
         "College Tier",
         ["Tier_1", "Tier_2", "Tier_3"],
         format_func=lambda x: {
-            "Tier_1": "🏆 Tier 1 (IITs/NITs)",
-            "Tier_2": "⭐ Tier 2 (Good State/Private)",
-            "Tier_3": "📌 Tier 3 (Other)",
+            "Tier_1": "Tier 1 (IITs/NITs)",
+            "Tier_2": "Tier 2 (Good State/Private)",
+            "Tier_3": "Tier 3 (Other)",
         }[x],
         key="tier",
     )
 
     st.markdown("---")
-    st.markdown("### 🏅 Achievements")
+    st.markdown("### Achievements")
     backlogs = st.number_input(
-        "Number of Backlogs", min_value=0, max_value=50,
-        value=0, step=1, key="backlogs"
+        "Number of Backlogs", min_value=0, max_value=50, value=0, step=1, key="backlogs"
     )
     extracurricular = st.toggle("Extracurricular Activities", value=True, key="extra")
     research = st.number_input(
-        "Research Papers", min_value=0, max_value=20,
-        value=0, step=1, key="research"
+        "Research Papers", min_value=0, max_value=20, value=0, step=1, key="research"
     )
     internship = st.number_input(
-        "Internships", min_value=0, max_value=10,
-        value=1, step=1, key="internship"
+        "Internships", min_value=0, max_value=10, value=1, step=1, key="internship"
     )
 
 
@@ -276,11 +302,11 @@ with st.sidebar:
 # Header
 st.markdown(
     '<div class="animated">'
-    '<p class="header-title">🎓 College Admission Predictor</p>'
+    '<p class="header-title">College Admission Predictor</p>'
     '<p class="header-subtitle">'
-    'AI-powered admission probability prediction for Indian students'
-    '</p>'
-    '</div>',
+    "AI-powered admission probability prediction for Indian students"
+    "</p>"
+    "</div>",
     unsafe_allow_html=True,
 )
 
@@ -288,7 +314,7 @@ st.markdown(
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     predict_clicked = st.button(
-        "🔮 Predict My Admission Chance",
+        "Predict My Admission Chance",
         type="primary",
         use_container_width=True,
     )
@@ -333,12 +359,12 @@ if predict_clicked:
                 st.markdown(
                     f'<div class="result-card {css_class} animated">'
                     f'<div style="color: rgba(255,255,255,0.7); font-size: 1rem;">'
-                    f'Your Admission Chance</div>'
+                    f"Your Admission Chance</div>"
                     f'<div class="big-number" style="color: {color};">'
-                    f'{chance * 100:.1f}%</div>'
+                    f"{chance * 100:.1f}%</div>"
                     f'<div class="confidence-label" style="color: {color};">'
-                    f'{emoji} {confidence} Confidence</div>'
-                    f'</div>',
+                    f"{emoji} {confidence} Confidence</div>"
+                    f"</div>",
                     unsafe_allow_html=True,
                 )
 
@@ -347,12 +373,12 @@ if predict_clicked:
                 f'<div class="progress-container">'
                 f'<div class="progress-bar" style="width: {chance * 100}%; '
                 f'background: linear-gradient(90deg, {color}88, {color});"></div>'
-                f'</div>',
+                f"</div>",
                 unsafe_allow_html=True,
             )
 
             # Detailed metrics
-            st.markdown("### 📊 Prediction Details")
+            st.markdown("### Prediction Details")
             m1, m2, m3, m4 = st.columns(4)
             m1.metric("CGPA", f"{cgpa:.1f}/10")
             m2.metric("JEE Percentile", f"{jee:.1f}%")
@@ -361,7 +387,7 @@ if predict_clicked:
 
             # SHAP explanation (if available)
             st.markdown("---")
-            st.markdown("### 🔍 Why This Prediction?")
+            st.markdown("### Why This Prediction?")
             try:
                 from src.explain import explain_prediction
                 from src.pipeline_builder import get_feature_names_from_pipeline
@@ -373,9 +399,7 @@ if predict_clicked:
                 feature_names = get_feature_names_from_pipeline(pipeline)
                 model = pipeline.named_steps["model"]
 
-                contributions = explain_prediction(
-                    model, X_transformed, feature_names
-                )
+                contributions = explain_prediction(model, X_transformed, feature_names)
 
                 if contributions:
                     # Show top factors
@@ -399,8 +423,8 @@ if predict_clicked:
                                 f'<div style="color: rgba(255,255,255,0.7); '
                                 f'font-size: 0.8rem;">{display_name}</div>'
                                 f'<div class="{css}" style="font-size: 1.3rem;">'
-                                f'{sign}{val:.4f}</div>'
-                                f'</div>',
+                                f"{sign}{val:.4f}</div>"
+                                f"</div>",
                                 unsafe_allow_html=True,
                             )
                 else:
@@ -420,34 +444,34 @@ else:
     with info_col1:
         st.markdown(
             '<div class="result-card animated" style="text-align: center;">'
-            '<div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📝</div>'
+            '<div style="font-size: 2.5rem; margin-bottom: 0.5rem;">1</div>'
             '<div style="color: white; font-weight: 600; margin-bottom: 0.5rem;">'
-            'Enter Your Profile</div>'
+            "Enter Your Profile</div>"
             '<div style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">'
-            'Fill in your academic scores and personal details in the sidebar'
-            '</div></div>',
+            "Fill in your academic scores and personal details in the sidebar"
+            "</div></div>",
             unsafe_allow_html=True,
         )
     with info_col2:
         st.markdown(
             '<div class="result-card animated" style="text-align: center;">'
-            '<div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🤖</div>'
+            '<div style="font-size: 2.5rem; margin-bottom: 0.5rem;">2</div>'
             '<div style="color: white; font-weight: 600; margin-bottom: 0.5rem;">'
-            'AI Prediction</div>'
+            "AI Prediction</div>"
             '<div style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">'
-            'Our ML model analyzes 16 features to predict your admission chance'
-            '</div></div>',
+            "Our ML model analyzes 16 features to predict your admission chance"
+            "</div></div>",
             unsafe_allow_html=True,
         )
     with info_col3:
         st.markdown(
             '<div class="result-card animated" style="text-align: center;">'
-            '<div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📊</div>'
+            '<div style="font-size: 2.5rem; margin-bottom: 0.5rem;">3</div>'
             '<div style="color: white; font-weight: 600; margin-bottom: 0.5rem;">'
-            'Explainable AI</div>'
+            "Explainable AI</div>"
             '<div style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">'
-            'Understand exactly which factors influence your prediction'
-            '</div></div>',
+            "Understand exactly which factors influence your prediction"
+            "</div></div>",
             unsafe_allow_html=True,
         )
 
@@ -455,9 +479,9 @@ else:
     st.markdown(
         '<div style="text-align: center; color: rgba(255,255,255,0.5); '
         'font-size: 0.9rem;">'
-        '👈 Fill in your details in the sidebar and click '
-        '<strong>Predict My Admission Chance</strong>'
-        '</div>',
+        "👈 Fill in your details in the sidebar and click "
+        "<strong>Predict My Admission Chance</strong>"
+        "</div>",
         unsafe_allow_html=True,
     )
 
@@ -466,8 +490,8 @@ st.markdown("---")
 st.markdown(
     '<div style="text-align: center; color: rgba(255,255,255,0.3); '
     'font-size: 0.8rem; padding: 1rem 0;">'
-    'Built with ❤️ using Python, Scikit-learn, XGBoost, and Streamlit | '
-    'Chance of Admission Prediction (India)'
-    '</div>',
+    "Built with Python, Scikit-learn, XGBoost, and Streamlit | "
+    "Chance of Admission Prediction (India)"
+    "</div>",
     unsafe_allow_html=True,
 )

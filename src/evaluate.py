@@ -7,8 +7,6 @@ and visualization functions (actual vs predicted, residuals, etc.).
 
 from __future__ import annotations
 
-from typing import Any
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -74,14 +72,16 @@ def compare_models(results: dict[str, dict]) -> pd.DataFrame:
     rows = []
     for name, res in results.items():
         m = res["metrics"]
-        rows.append({
-            "Model": name,
-            "R2": round(m["r2"], 4),
-            "MAE": round(m["mae"], 4),
-            "RMSE": round(m["rmse"], 4),
-            "MSE": round(m["mse"], 6),
-            "Train_Time_s": res.get("time", m.get("train_time_seconds", 0)),
-        })
+        rows.append(
+            {
+                "Model": name,
+                "R2": round(m["r2"], 4),
+                "MAE": round(m["mae"], 4),
+                "RMSE": round(m["rmse"], 4),
+                "MSE": round(m["mse"], 6),
+                "Train_Time_s": res.get("time", m.get("train_time_seconds", 0)),
+            }
+        )
 
     df = pd.DataFrame(rows).sort_values("R2", ascending=False).reset_index(drop=True)
     logger.info(f"Model comparison table:\n{df.to_string(index=False)}")
@@ -120,8 +120,11 @@ def plot_actual_vs_predicted(
     min_val = min(np.min(y_true), np.min(y_pred))
     max_val = max(np.max(y_true), np.max(y_pred))
     ax.plot(
-        [min_val, max_val], [min_val, max_val],
-        "r--", linewidth=2, label="Perfect prediction",
+        [min_val, max_val],
+        [min_val, max_val],
+        "r--",
+        linewidth=2,
+        label="Perfect prediction",
     )
 
     ax.set_xlabel("Actual Admission Chance", fontsize=12)
@@ -176,9 +179,7 @@ def plot_residuals(
     axes[0].grid(True, alpha=0.3)
 
     # Residual distribution
-    axes[1].hist(
-        residuals, bins=40, color="#4CAF50", edgecolor="white", alpha=0.8
-    )
+    axes[1].hist(residuals, bins=40, color="#4CAF50", edgecolor="white", alpha=0.8)
     axes[1].axvline(x=0, color="red", linewidth=1.5, linestyle="--")
     axes[1].set_xlabel("Residual Value", fontsize=12)
     axes[1].set_ylabel("Frequency", fontsize=12)
@@ -214,8 +215,13 @@ def plot_model_comparison_bar(
     """
     fig, axes = plt.subplots(1, 3, figsize=(18, 6))
     colors = [
-        "#2196F3", "#4CAF50", "#FF9800", "#F44336",
-        "#9C27B0", "#00BCD4", "#FF5722",
+        "#2196F3",
+        "#4CAF50",
+        "#FF9800",
+        "#F44336",
+        "#9C27B0",
+        "#00BCD4",
+        "#FF5722",
     ]
 
     models = comparison_df["Model"]
@@ -223,7 +229,11 @@ def plot_model_comparison_bar(
     for ax, metric, label in zip(
         axes,
         ["R2", "MAE", "RMSE"],
-        ["R² Score (higher is better)", "MAE (lower is better)", "RMSE (lower is better)"],
+        [
+            "R² Score (higher is better)",
+            "MAE (lower is better)",
+            "RMSE (lower is better)",
+        ],
     ):
         bars = ax.bar(
             range(len(models)),
@@ -250,9 +260,7 @@ def plot_model_comparison_bar(
                 fontweight="bold",
             )
 
-    fig.suptitle(
-        "Model Comparison", fontsize=16, fontweight="bold", y=1.02
-    )
+    fig.suptitle("Model Comparison", fontsize=16, fontweight="bold", y=1.02)
     plt.tight_layout()
 
     path = save_path or str(resolve_path("reports/figures/model_comparison.png"))
@@ -294,7 +302,7 @@ def plot_feature_importance(
 
     fig, ax = plt.subplots(figsize=(10, max(6, top_n * 0.35)))
 
-    bars = ax.barh(
+    ax.barh(
         range(len(top_features)),
         top_importances,
         color="#2196F3",

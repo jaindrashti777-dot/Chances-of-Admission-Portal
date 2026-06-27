@@ -7,8 +7,6 @@ and logging. Never silently fails — all errors are logged.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pandas as pd
 
 from src.config import resolve_path

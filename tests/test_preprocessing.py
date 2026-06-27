@@ -16,15 +16,19 @@ from src.preprocessing import (
 
 @pytest.fixture
 def raw_data():
-    return pd.DataFrame({
-        "Tenth_Percentage": [80, 90, 85, np.nan, 200],  # One NaN, one outlier
-        "Category": ["General", "OBC", "General", np.nan, "SC"],
-        "Gap_Year": [0, 1.0, 0, 0, 0],
-    })
+    return pd.DataFrame(
+        {
+            "Tenth_Percentage": [80, 90, 85, np.nan, 200],  # One NaN, one outlier
+            "Category": ["General", "OBC", "General", np.nan, "SC"],
+            "Gap_Year": [0, 1.0, 0, 0, 0],
+        }
+    )
 
 
 def test_handle_missing_values(raw_data):
-    df_clean = handle_missing_values(raw_data, numerical_strategy="median", categorical_strategy="mode")
+    df_clean = handle_missing_values(
+        raw_data, numerical_strategy="median", categorical_strategy="mode"
+    )
     assert df_clean["Tenth_Percentage"].isnull().sum() == 0
     assert df_clean["Category"].isnull().sum() == 0
     # Median of [80, 90, 85, 200] is 87.5

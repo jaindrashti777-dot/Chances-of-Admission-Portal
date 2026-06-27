@@ -15,8 +15,10 @@ Docs:
 
 from __future__ import annotations
 
+import logging
 import sys
 from pathlib import Path
+from typing import Literal
 
 # Resolve project root for imports
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -25,8 +27,10 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(
-    title="🎓 Admission Prediction API",
+    title="Admission Prediction API",
     description=(
         "Predict the probability of a student getting college admission in India "
         "based on 16 academic and demographic features."
@@ -51,46 +55,41 @@ class AdmissionInput(BaseModel):
     Twelfth_Percentage: float = Field(
         ..., ge=0, le=100, description="12th class percentage"
     )
-    JEE_Percentile: float = Field(
-        ..., ge=0, le=100, description="JEE exam percentile"
-    )
-    CUET_Score: float = Field(
-        ..., ge=0, le=800, description="CUET exam score"
-    )
-    Category: str = Field(
+    JEE_Percentile: float = Field(..., ge=0, le=100, description="JEE exam percentile")
+    CUET_Score: float = Field(..., ge=0, le=800, description="CUET exam score")
+    Category: Literal["General", "OBC", "SC", "ST", "EWS"] = Field(
         ..., description="Category: General, OBC, SC, ST, EWS"
     )
-    State: str = Field(
-        ..., description="Home state"
-    )
+    State: Literal[
+        "Maharashtra",
+        "Delhi",
+        "Karnataka",
+        "Tamil_Nadu",
+        "Uttar_Pradesh",
+        "West_Bengal",
+        "Rajasthan",
+        "Gujarat",
+        "Telangana",
+        "Kerala",
+    ] = Field(..., description="Home state")
     Family_Income: float = Field(
         ..., ge=0, le=200, description="Family income in Lakhs/year"
     )
-    Gender: str = Field(
-        ..., description="Gender: Male or Female"
-    )
-    Gap_Year: int = Field(
-        ..., ge=0, le=5, description="Number of gap years"
-    )
-    CGPA: float = Field(
-        ..., ge=0, le=10, description="Current CGPA"
-    )
-    Backlogs: int = Field(
-        ..., ge=0, le=50, description="Number of backlogs"
-    )
+    Gender: Literal["Male", "Female"] = Field(..., description="Gender: Male or Female")
+    Gap_Year: int = Field(..., ge=0, le=5, description="Number of gap years")
+    CGPA: float = Field(..., ge=0, le=10, description="Current CGPA")
+    Backlogs: int = Field(..., ge=0, le=50, description="Number of backlogs")
     Extracurricular: int = Field(
         ..., ge=0, le=1, description="Extracurricular activities (0 or 1)"
     )
     Research_Paper: int = Field(
         ..., ge=0, le=20, description="Number of research papers"
     )
-    Internship: int = Field(
-        ..., ge=0, le=10, description="Number of internships"
-    )
-    Desired_Branch: str = Field(
-        ..., description="Branch: CSE, ECE, ME, CE, EE, IT, Chemical, Biotech"
-    )
-    College_Tier: str = Field(
+    Internship: int = Field(..., ge=0, le=10, description="Number of internships")
+    Desired_Branch: Literal[
+        "CSE", "ECE", "ME", "CE", "EE", "IT", "Chemical", "Biotech"
+    ] = Field(..., description="Branch: CSE, ECE, ME, CE, EE, IT, Chemical, Biotech")
+    College_Tier: Literal["Tier_1", "Tier_2", "Tier_3"] = Field(
         ..., description="College tier: Tier_1, Tier_2, Tier_3"
     )
 
@@ -136,9 +135,7 @@ class PredictionOutput(BaseModel):
         default_factory=list,
         description="Top contributing factors (SHAP-based)",
     )
-    timestamp: str = Field(
-        ..., description="Prediction timestamp"
-    )
+    timestamp: str = Field(..., description="Prediction timestamp")
 
 
 class HealthResponse(BaseModel):
@@ -229,8 +226,8 @@ def predict(input_data: AdmissionInput):
                 {"feature": k, "contribution": v}
                 for k, v in list(contributions.items())[:5]
             ]
-        except Exception:
-            pass  # SHAP is optional — don't fail the prediction
+        except Exception as e:
+            logger.info("SHAP explanation unavailable: %s", e)
 
         return PredictionOutput(
             admission_chance=result["admission_chance"],
@@ -251,17 +248,18 @@ def metrics():
     """
     Retrieve basic system and model usage metrics.
     """
-    from src.config import resolve_path, load_config
     import pandas as pd
-    
+
+    from src.config import load_config, resolve_path
+
     config = load_config()
     log_path = resolve_path(
         config.get("data", {}).get("predictions_log", "reports/predictions.csv")
     )
-    
+
     total_predictions = 0
     average_prediction = 0.0
-    
+
     if log_path.exists():
         try:
             df = pd.read_csv(log_path)
@@ -270,12 +268,12 @@ def metrics():
                 average_prediction = round(float(df["prediction"].mean()), 4)
         except Exception:
             pass
-            
+
     return {
         "total_predictions_served": total_predictions,
         "average_admission_chance_predicted": average_prediction,
         "model_version": "1.0.0",
-        "status": "active"
+        "status": "active",
     }
 
 
@@ -283,7 +281,7 @@ def metrics():
 def root():
     """API root — redirects to documentation."""
     return {
-        "message": "🎓 Admission Prediction API",
+        "message": "Admission Prediction API",
         "docs": "/docs",
         "health": "/health",
         "predict": "POST /predict",

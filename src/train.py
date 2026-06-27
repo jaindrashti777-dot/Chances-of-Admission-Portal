@@ -8,6 +8,7 @@ to MLflow, and performs hyperparameter tuning on the best candidates.
 from __future__ import annotations
 
 import os
+
 os.environ["MLFLOW_ALLOW_FILE_STORE"] = "true"
 
 import time
@@ -15,7 +16,6 @@ from typing import Any
 
 import mlflow
 import mlflow.sklearn
-import numpy as np
 import pandas as pd
 from catboost import CatBoostRegressor
 from lightgbm import LGBMRegressor
@@ -114,7 +114,9 @@ def train_all_models(
     results: dict[str, dict] = {}
 
     config = load_config()
-    mlflow_uri = resolve_path(config.get("mlflow", {}).get("tracking_uri", "mlruns")).as_uri()
+    mlflow_uri = resolve_path(
+        config.get("mlflow", {}).get("tracking_uri", "mlruns")
+    ).as_uri()
     experiment_name = config.get("mlflow", {}).get(
         "experiment_name", "admission_prediction"
     )
@@ -203,9 +205,16 @@ def tune_model(
     logger.info(f"Tuning {model_name} with {n_iter} iterations, {cv}-fold CV")
 
     try:
+        preprocessor = build_preprocessor()
+        pipeline = build_full_pipeline(model, preprocessor)
+        pipeline_param_grid = {
+            key if key.startswith("model__") else f"model__{key}": value
+            for key, value in param_grid.items()
+        }
+
         search = RandomizedSearchCV(
-            model,
-            param_distributions=param_grid,
+            pipeline,
+            param_distributions=pipeline_param_grid,
             n_iter=n_iter,
             cv=cv,
             scoring="r2",
@@ -282,29 +291,68 @@ def run_training_pipeline() -> None:
         best_pipeline = results[best_name]["pipeline"]
         logger.info(f"\nBest model: {best_name}")
 
-        # 7. Plot comparison
+        # 7. Tune the selected model when a hyperparameter grid exists.
+        config = load_config()
+        config_key_by_model = {
+            "Linear_Regression": "linear_regression",
+            "Decision_Tree": "decision_tree",
+            "Random_Forest": "random_forest",
+            "Gradient_Boosting": "gradient_boosting",
+            "XGBoost": "xgboost",
+            "LightGBM": "lightgbm",
+            "CatBoost": "catboost",
+        }
+        model_config_key = config_key_by_model.get(best_name)
+        param_grid = config.get("models", {}).get(model_config_key, {})
+        final_pipeline = best_pipeline
+
+        if param_grid:
+            logger.info(f"\nTuning best model: {best_name}")
+            try:
+                final_pipeline = tune_model(
+                    get_models()[best_name],
+                    param_grid,
+                    X_train,
+                    y_train,
+                    n_iter=10,
+                    cv=3,
+                )
+                val_metrics = evaluate_model(final_pipeline, X_val, y_val)
+                logger.info(
+                    f"Tuned {best_name}: R2={val_metrics['r2']:.4f}, "
+                    f"MAE={val_metrics['mae']:.4f}, "
+                    f"RMSE={val_metrics['rmse']:.4f}"
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Hyperparameter tuning failed for {best_name}; "
+                    f"using base model. Error: {e}"
+                )
+        else:
+            logger.info(f"No tuning grid configured for {best_name}; using base model")
+
+        # 8. Plot comparison
         try:
             plot_model_comparison_bar(comparison_df)
         except Exception as e:
             logger.warning(f"Could not create comparison plot: {e}")
 
-        # 8. Final evaluation on test set
-        test_metrics = evaluate_model(best_pipeline, X_test, y_test)
+        # 9. Final evaluation on test set
+        test_metrics = evaluate_model(final_pipeline, X_test, y_test)
         logger.info(f"\nTest set evaluation ({best_name}):")
         for k, v in test_metrics.items():
             logger.info(f"  {k}: {v:.4f}")
 
-        # 9. Save the best pipeline
-        config = load_config()
+        # 10. Save the best pipeline
         pipeline_path = resolve_path(
             config.get("model_paths", {}).get("pipeline", "models/pipeline.pkl")
         )
         model_path = resolve_path(
             config.get("model_paths", {}).get("best_model", "models/best_model.pkl")
         )
-        save_model(best_pipeline, pipeline_path)
+        save_model(final_pipeline, pipeline_path)
         save_model(
-            best_pipeline.named_steps["model"],
+            final_pipeline.named_steps["model"],
             model_path,
         )
 

@@ -7,8 +7,6 @@ and permutation importance to explain predictions.
 
 from __future__ import annotations
 
-from typing import Any
-
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -197,10 +195,16 @@ def generate_feature_importance_report(
             return pd.DataFrame()
 
         # Build DataFrame
-        importance_df = pd.DataFrame({
-            "Feature": feature_names,
-            "Importance": importances,
-        }).sort_values("Importance", ascending=False).reset_index(drop=True)
+        importance_df = (
+            pd.DataFrame(
+                {
+                    "Feature": feature_names,
+                    "Importance": importances,
+                }
+            )
+            .sort_values("Importance", ascending=False)
+            .reset_index(drop=True)
+        )
 
         # Plot top N
         top = importance_df.head(top_n)
@@ -214,9 +218,7 @@ def generate_feature_importance_report(
         ax.set_yticks(range(len(top)))
         ax.set_yticklabels(top["Feature"].values[::-1], fontsize=10)
         ax.set_xlabel("Importance", fontsize=12)
-        ax.set_title(
-            f"Top {top_n} Feature Importances", fontsize=14, fontweight="bold"
-        )
+        ax.set_title(f"Top {top_n} Feature Importances", fontsize=14, fontweight="bold")
         ax.grid(axis="x", alpha=0.3)
         plt.tight_layout()
 
