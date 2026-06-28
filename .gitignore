@@ -24,7 +24,7 @@ dist/
 build/
 
 # Models (large binary files)
-models/*.pkl
+# models/*.pkl
 
 # Training artifacts
 catboost_info/
