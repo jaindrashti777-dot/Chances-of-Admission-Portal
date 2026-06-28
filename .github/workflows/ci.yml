@@ -26,15 +26,15 @@ jobs:
         
     - name: Format with Black
       run: |
-        black --check src/ api/ app/ tests/
+        black --check src/ api/ tests/ streamlit_app.py
         
     - name: Sort imports with isort
       run: |
-        isort --check-only src/ api/ app/ tests/
+        isort --check-only src/ api/ tests/ streamlit_app.py
         
     - name: Lint with flake8
       run: |
-        flake8 src/ api/ app/ tests/
+        flake8 src/ api/ tests/ streamlit_app.py
         
     - name: Test with pytest
       run: |

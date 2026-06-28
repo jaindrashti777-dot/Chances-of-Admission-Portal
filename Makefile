@@ -40,7 +40,7 @@ train:
 
 # --- Applications -------------------------------------------------------------
 app:
-	.venv\Scripts\streamlit run app\streamlit_app.py
+	.venv\Scripts\streamlit run streamlit_app.py
 
 api:
 	.venv\Scripts\uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
@@ -51,11 +51,11 @@ test:
 
 # --- Code Quality -------------------------------------------------------------
 lint:
-	.venv\Scripts\flake8 src\ api\ app\ tests\
+	.venv\Scripts\flake8 src\ api\ tests\ streamlit_app.py
 
 format:
-	.venv\Scripts\black src\ api\ app\ tests\
-	.venv\Scripts\isort src\ api\ app\ tests\
+	.venv\Scripts\black src\ api\ tests\ streamlit_app.py
+	.venv\Scripts\isort src\ api\ tests\ streamlit_app.py
 
 # --- Docker -------------------------------------------------------------------
 docker-up:
