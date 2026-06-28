@@ -1,25 +1,23 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import { 
   LayoutDashboard, 
   History, 
+  GitCompare, 
   LineChart, 
-  Lightbulb, 
-  GraduationCap, 
-  Settings, 
+  Lightbulb,
+  GraduationCap,
+  Building,
+  Settings,
   Info,
   Moon,
   Sun
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
-
-interface SidebarProps {
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
-}
 
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={20} /> },
@@ -34,8 +32,14 @@ const BOTTOM_ITEMS = [
   { label: 'Settings', href: '/dashboard/settings', icon: <Settings size={20} /> },
 ];
 
-export function Sidebar({ isDarkMode, toggleDarkMode }: SidebarProps) {
+export function Sidebar() {
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <aside className={styles.sidebar}>
@@ -81,12 +85,15 @@ export function Sidebar({ isDarkMode, toggleDarkMode }: SidebarProps) {
           })}
         </div>
 
-        <div className={styles.themeToggle} onClick={toggleDarkMode}>
+        <div 
+          className={styles.themeToggle} 
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        >
           <span className={styles.icon}>
-            {isDarkMode ? <Moon size={20} /> : <Sun size={20} />}
+            {mounted && theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
           </span>
-          <span className={styles.label}>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
-          <div className={`${styles.switch} ${isDarkMode ? styles.switchActive : ''}`}>
+          <span className={styles.label}>{mounted && theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
+          <div className={`${styles.switch} ${mounted && theme === 'dark' ? styles.switchActive : ''}`}>
             <div className={styles.switchHandle} />
           </div>
         </div>

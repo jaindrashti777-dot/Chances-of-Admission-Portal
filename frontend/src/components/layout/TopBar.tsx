@@ -11,16 +11,17 @@ export function TopBar() {
           type="text" 
           placeholder="Search colleges, branches, or features..." 
           className={styles.searchInput}
+          onClick={() => alert('Search functionality coming soon!')}
         />
       </div>
 
       <div className={styles.actions}>
-        <button className={styles.iconButton}>
+        <button className={styles.iconButton} onClick={() => alert('Notifications coming soon!')}>
           <Bell size={20} />
           <span className={styles.notificationBadge} />
         </button>
         
-        <div className={styles.profileDropdown}>
+        <div className={styles.profileDropdown} onClick={() => alert('Profile settings coming soon!')}>
           <div className={styles.avatar}>
             <User size={18} />
           </div>

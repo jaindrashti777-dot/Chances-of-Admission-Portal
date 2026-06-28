@@ -11,6 +11,33 @@ import { FeatureBar } from '@/components/charts/FeatureBar';
 import { GraduationCap, Award, BrainCircuit, Activity, Download } from 'lucide-react';
 import styles from './DashboardPage.module.css';
 
+interface PredictionResult {
+  admission_chance: number;
+  confidence_level: string;
+  resume_score: number;
+  top_factors?: { feature: string; contribution: number }[];
+}
+
+const FEATURE_LABELS: Record<string, string> = {
+  'num__Tenth_Percentage': '10th Percentage',
+  'num__Twelfth_Percentage': '12th Percentage',
+  'num__JEE_Percentile': 'JEE Percentile',
+  'num__CUET_Score': 'CUET Score',
+  'num__CGPA': 'CGPA',
+  'num__Backlogs': 'Active Backlogs',
+  'num__Family_Income': 'Family Income',
+  'num__Gap_Year': 'Gap Years',
+  'num__Research_Paper': 'Research Papers',
+  'num__Internship': 'Internships',
+  'cat__Category_General': 'General Category',
+  'cat__Gender_Male': 'Male',
+  'cat__Gender_Female': 'Female',
+};
+
+function formatFeatureName(rawName: string) {
+  return FEATURE_LABELS[rawName] || rawName.replace(/^(num__|cat__)/, '').replace(/_/g, ' ');
+}
+
 export default function Dashboard() {
   const [formData, setFormData] = useState({
     Tenth_Percentage: 90,
@@ -32,7 +59,8 @@ export default function Dashboard() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [prediction, setPrediction] = useState<any>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [prediction, setPrediction] = useState<PredictionResult | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -48,6 +76,7 @@ export default function Dashboard() {
   const handlePredict = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setLoading(true);
+    setErrorMsg(null);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       const res = await fetch(`${apiUrl}/predict`, {
@@ -55,10 +84,26 @@ export default function Dashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Prediction failed. Please check your inputs.');
+      }
+      
       const data = await res.json();
+      
+      // Format SHAP feature names
+      if (data.top_factors) {
+        data.top_factors = data.top_factors.map((f: any) => ({
+          ...f,
+          feature: formatFeatureName(f.feature)
+        }));
+      }
+      
       setPrediction(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Prediction failed:", error);
+      setErrorMsg(error.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -72,7 +117,7 @@ export default function Dashboard() {
           <p className={styles.subtitle}>Predict your probability of getting admission into Indian engineering colleges.</p>
         </div>
         {prediction && (
-          <Button variant="outline" icon={<Download size={18} />}>
+          <Button variant="outline" icon={<Download size={18} />} onClick={() => window.print()}>
             Download Report
           </Button>
         )}
@@ -186,7 +231,13 @@ export default function Dashboard() {
 
         {/* RIGHT COLUMN: Results */}
         <div className={styles.resultsCol}>
-          {!prediction ? (
+          {errorMsg ? (
+            <GlassCard className={styles.emptyState}>
+              <Activity size={48} className={styles.emptyIcon} style={{ color: 'var(--error-color)' }} />
+              <h3 style={{ color: 'var(--error-color)' }}>Prediction Error</h3>
+              <p>{errorMsg}</p>
+            </GlassCard>
+          ) : !prediction ? (
             <GlassCard className={styles.emptyState}>
               <BrainCircuit size={48} className={styles.emptyIcon} />
               <h3>Awaiting Profile</h3>
@@ -222,7 +273,7 @@ export default function Dashboard() {
               {/* SHAP Factors */}
               {prediction.top_factors && prediction.top_factors.length > 0 && (
                 <GlassCard className={styles.shapCard}>
-                  <h3>What's Influencing Your Score?</h3>
+                  <h3>What&apos;s Influencing Your Score?</h3>
                   <p className={styles.shapDesc}>
                     Based on SHAP explainability, here are the top factors affecting your probability.
                   </p>

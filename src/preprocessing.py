@@ -120,7 +120,7 @@ def handle_missing_values(
                     fill_val = df[col].mean()
                 else:
                     fill_val = 0
-                df[col].fillna(fill_val, inplace=True)
+                df[col] = df[col].fillna(fill_val)
                 logger.info(
                     f"  {col}: filled {n_missing} nulls with "
                     f"{numerical_strategy}={fill_val:.2f}"
@@ -135,7 +135,7 @@ def handle_missing_values(
                     fill_val = df[col].mode()[0]
                 else:
                     fill_val = "Unknown"
-                df[col].fillna(fill_val, inplace=True)
+                df[col] = df[col].fillna(fill_val)
                 logger.info(
                     f"  {col}: filled {n_missing} nulls with "
                     f"{categorical_strategy}='{fill_val}'"

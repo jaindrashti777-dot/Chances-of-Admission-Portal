@@ -3,7 +3,7 @@ services:
     name: admission-ai-backend
     env: docker
     plan: free
-    healthCheckPath: /api/health
+    healthCheckPath: /health
     envVars:
       - key: PORT
         value: 10000

@@ -19,3 +19,9 @@
   padding: 2rem;
   background: var(--bg-primary);
 }
+
+@media (max-width: 768px) {
+  .mainContent {
+    padding: 1rem;
+  }
+}

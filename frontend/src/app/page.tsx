@@ -44,7 +44,7 @@ export default function Home() {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           Predict Your Future.<br/>
-          <span className={styles.highlight}>Guarantee Your Admission.</span>
+          <span className={styles.highlight}>Analyze Your Profile.</span>
         </motion.h1>
 
         <motion.p 
@@ -53,7 +53,7 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          Stop guessing your chances. Use our AI model trained on over 500,000 student records to predict your probability of getting into top Indian engineering colleges with 96% accuracy.
+          Explore this machine learning portfolio project demonstrating end-to-end data pipelines, custom SHAP explainability, and a modern Next.js architecture using a synthetic admissions dataset.
         </motion.p>
 
         <motion.div 

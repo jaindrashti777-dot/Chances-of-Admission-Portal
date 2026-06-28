@@ -1,0 +1,15 @@
+# Minimal requirements for the FastAPI backend on Render free tier.
+# Excludes heavy packages (catboost, mlflow, streamlit, dev tools) to fit
+# within the 512 MB memory limit.
+
+pandas==2.3.3
+numpy==2.4.6
+scikit-learn==1.9.0
+xgboost==3.3.0
+lightgbm==4.6.0
+joblib==1.5.3
+shap==0.52.0
+fastapi==0.138.1
+uvicorn==0.49.0
+pyyaml==6.0.3
+httpx==0.28.1
