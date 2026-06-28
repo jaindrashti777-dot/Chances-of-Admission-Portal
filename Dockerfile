@@ -14,9 +14,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
-# Expose ports for FastAPI (8000) and Streamlit (8501)
-EXPOSE 8000 8501
+# Render and other cloud providers inject a PORT environment variable
+ENV PORT=8000
+EXPOSE $PORT
 
 # Default command runs FastAPI.
-# To run Streamlit, override the command in docker-compose.yml
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD uvicorn api.main:app --host 0.0.0.0 --port $PORT
