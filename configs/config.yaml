@@ -1,5 +1,5 @@
 # ==============================================================================
-# Chance of Admission Prediction (India) — Configuration
+# Chance of Admission Prediction (India) - Configuration
 # ==============================================================================
 # All tunable parameters in one place. No hardcoding anywhere in the codebase.
 # ==============================================================================
@@ -7,7 +7,7 @@
 project:
   name: "Chance of Admission Prediction (India)"
   version: "1.0.0"
-  description: "Production-grade ML system to predict college admission probability"
+  description: "Synthetic-data ML system for demonstrating admission prediction engineering"
   random_state: 42
 
 # --- Data Paths ---------------------------------------------------------------

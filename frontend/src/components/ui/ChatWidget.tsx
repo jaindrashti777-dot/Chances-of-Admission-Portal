@@ -14,7 +14,11 @@ interface Message {
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', text: "Hi! I'm your Admission AI assistant. Ask me how you can improve your profile!", sender: 'bot' }
+    {
+      id: '1',
+      text: 'Hi. I can explain how this synthetic model responds to fields like CGPA, backlogs, internships, and research papers.',
+      sender: 'bot',
+    },
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -37,12 +41,21 @@ export function ChatWidget() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMsg.text }),
       });
-      const data = await response.json();
-      
-      const botMsg: Message = { id: (Date.now() + 1).toString(), text: data.response, sender: 'bot' };
+
+      if (!response.ok) {
+        throw new Error('Advisor request failed');
+      }
+
+      const data: { response?: string } = await response.json();
+
+      const botMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        text: data.response || 'The advisor did not return a response.',
+        sender: 'bot',
+      };
       setMessages(prev => [...prev, botMsg]);
-    } catch (error) {
-      const errorMsg: Message = { id: (Date.now() + 1).toString(), text: "Sorry, I'm having trouble connecting to the server.", sender: 'bot' };
+    } catch {
+      const errorMsg: Message = { id: (Date.now() + 1).toString(), text: "I couldn't connect to the server. Please try again later.", sender: 'bot' };
       setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
@@ -69,7 +82,7 @@ export function ChatWidget() {
                 <div className={styles.botIconWrapper}>
                   <Bot size={18} />
                 </div>
-                <span className={styles.headerTitle}>AI Advisor</span>
+                <span className={styles.headerTitle}>Model Advisor</span>
               </div>
               <button className={styles.closeButton} onClick={toggleChat}>
                 <X size={18} />
@@ -108,10 +121,14 @@ export function ChatWidget() {
               )}
             </div>
 
+            <div className={styles.disclaimerText}>
+              Rule-based helper for this demo model. Not admissions advice.
+            </div>
+
             <form onSubmit={handleSend} className={styles.inputArea}>
               <input
                 type="text"
-                placeholder="Ask me anything..."
+                placeholder="Ask about CGPA, backlogs, or internships"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 className={styles.input}

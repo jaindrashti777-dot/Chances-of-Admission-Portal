@@ -8,7 +8,7 @@ import { WhatIfSlider } from '@/components/ui/WhatIfSlider';
 import { Button } from '@/components/ui/Button';
 import { CircularProgress } from '@/components/ui/CircularProgress';
 import { FeatureBar } from '@/components/charts/FeatureBar';
-import { GraduationCap, Award, BrainCircuit, Activity, Download } from 'lucide-react';
+import { GraduationCap, Award, BrainCircuit, Activity, Printer } from 'lucide-react';
 import styles from './DashboardPage.module.css';
 
 interface PredictionResult {
@@ -17,6 +17,14 @@ interface PredictionResult {
   resume_score: number;
   top_factors?: { feature: string; contribution: number }[];
 }
+
+type ApiErrorDetail =
+  | string
+  | {
+      message?: string;
+      detail?: string;
+      error?: string;
+    };
 
 const FEATURE_LABELS: Record<string, string> = {
   'num__Tenth_Percentage': '10th Percentage',
@@ -36,6 +44,52 @@ const FEATURE_LABELS: Record<string, string> = {
 
 function formatFeatureName(rawName: string) {
   return FEATURE_LABELS[rawName] || rawName.replace(/^(num__|cat__)/, '').replace(/_/g, ' ');
+}
+
+function formatApiError(payload: unknown, fallback: string) {
+  if (!payload || typeof payload !== 'object') return fallback;
+
+  const body = payload as {
+    message?: string;
+    detail?: ApiErrorDetail;
+    details?: { field?: string; message?: string }[];
+  };
+
+  if (Array.isArray(body.details) && body.details.length > 0) {
+    return body.details
+      .map((detail) => `${detail.field || 'Field'}: ${detail.message || 'Invalid value'}`)
+      .join(' ');
+  }
+
+  if (typeof body.detail === 'string') return body.detail;
+  if (body.detail && typeof body.detail === 'object') {
+    return body.detail.message || body.detail.detail || body.detail.error || fallback;
+  }
+
+  return body.message || fallback;
+}
+
+function normalizePrediction(data: PredictionResult): PredictionResult {
+  const chance = Number(data.admission_chance);
+  const resumeScore = Number(data.resume_score);
+
+  if (!Number.isFinite(chance) || chance < 0 || chance > 1) {
+    throw new Error('The API returned an invalid prediction value.');
+  }
+
+  return {
+    admission_chance: chance,
+    confidence_level: ['High', 'Medium', 'Low'].includes(data.confidence_level)
+      ? data.confidence_level
+      : 'Medium',
+    resume_score: Number.isFinite(resumeScore) ? Math.max(0, Math.min(100, Math.round(resumeScore))) : 0,
+    top_factors: (data.top_factors || [])
+      .filter((factor) => Number.isFinite(Number(factor.contribution)))
+      .map((factor) => ({
+        feature: formatFeatureName(factor.feature),
+        contribution: Number(factor.contribution),
+      })),
+  };
 }
 
 export default function Dashboard() {
@@ -87,23 +141,14 @@ export default function Dashboard() {
       
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'Prediction failed. Please check your inputs.');
+        throw new Error(formatApiError(errorData, 'Prediction failed. Please check your inputs.'));
       }
       
-      const data = await res.json();
-      
-      // Format SHAP feature names
-      if (data.top_factors) {
-        data.top_factors = data.top_factors.map((f: any) => ({
-          ...f,
-          feature: formatFeatureName(f.feature)
-        }));
-      }
-      
-      setPrediction(data);
-    } catch (error: any) {
-      console.error("Prediction failed:", error);
-      setErrorMsg(error.message || 'An unexpected error occurred.');
+      const data: PredictionResult = await res.json();
+      setPrediction(normalizePrediction(data));
+    } catch (err: unknown) {
+      console.error('Prediction failed:', err);
+      setErrorMsg(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -114,11 +159,13 @@ export default function Dashboard() {
       <header className={styles.header}>
         <div>
           <h1 className={styles.title}>Chance of Admission Predictor</h1>
-          <p className={styles.subtitle}>Predict your probability of getting admission into Indian engineering colleges.</p>
+          <p className={styles.subtitle}>
+            Explore how a synthetic ML pipeline scores an example engineering admission profile.
+          </p>
         </div>
         {prediction && (
-          <Button variant="outline" icon={<Download size={18} />} onClick={() => window.print()}>
-            Download Report
+          <Button variant="outline" icon={<Printer size={18} />} onClick={() => window.print()}>
+            Print Report
           </Button>
         )}
       </header>
@@ -133,10 +180,10 @@ export default function Dashboard() {
                 <h3>Academic Performance</h3>
               </div>
               <div className={styles.inputGrid}>
-                <PremiumInput label="10th Percentage (%)" name="Tenth_Percentage" type="number" step="0.1" value={formData.Tenth_Percentage} onChange={handleChange} required />
-                <PremiumInput label="12th Percentage (%)" name="Twelfth_Percentage" type="number" step="0.1" value={formData.Twelfth_Percentage} onChange={handleChange} required />
+                <PremiumInput label="10th Percentage (%)" name="Tenth_Percentage" type="number" step="0.1" min="0" max="100" value={formData.Tenth_Percentage} onChange={handleChange} required />
+                <PremiumInput label="12th Percentage (%)" name="Twelfth_Percentage" type="number" step="0.1" min="0" max="100" value={formData.Twelfth_Percentage} onChange={handleChange} required />
                 <WhatIfSlider label="Current CGPA (out of 10)" min={0} max={10} step={0.1} value={formData.CGPA} onChange={(v) => handleSliderChange('CGPA', v)} />
-                <PremiumInput label="Active Backlogs" name="Backlogs" type="number" value={formData.Backlogs} onChange={handleChange} required />
+                <PremiumInput label="Active Backlogs" name="Backlogs" type="number" min="0" max="50" step="1" value={formData.Backlogs} onChange={handleChange} required />
               </div>
 
               <div className={styles.sectionHeader}>
@@ -144,8 +191,8 @@ export default function Dashboard() {
                 <h3>Entrance Exams</h3>
               </div>
               <div className={styles.inputGrid}>
-                <PremiumInput label="JEE Percentile" name="JEE_Percentile" type="number" step="0.1" value={formData.JEE_Percentile} onChange={handleChange} required />
-                <PremiumInput label="CUET Score (out of 800)" name="CUET_Score" type="number" value={formData.CUET_Score} onChange={handleChange} required />
+                <PremiumInput label="JEE Percentile" name="JEE_Percentile" type="number" step="0.1" min="0" max="100" value={formData.JEE_Percentile} onChange={handleChange} required />
+                <PremiumInput label="CUET Score (out of 800)" name="CUET_Score" type="number" min="0" max="800" step="1" value={formData.CUET_Score} onChange={handleChange} required />
               </div>
 
               <div className={styles.sectionHeader}>
@@ -157,8 +204,8 @@ export default function Dashboard() {
                   label="Extracurriculars" name="Extracurricular" value={formData.Extracurricular} onChange={handleChange}
                   options={[{ value: 0, label: 'No' }, { value: 1, label: 'Yes' }]} 
                 />
-                <PremiumInput label="Research Papers" name="Research_Paper" type="number" value={formData.Research_Paper} onChange={handleChange} required />
-                <PremiumInput label="Internships" name="Internship" type="number" value={formData.Internship} onChange={handleChange} required />
+                <PremiumInput label="Research Papers" name="Research_Paper" type="number" min="0" max="20" step="1" value={formData.Research_Paper} onChange={handleChange} required />
+                <PremiumInput label="Internships" name="Internship" type="number" min="0" max="10" step="1" value={formData.Internship} onChange={handleChange} required />
               </div>
 
               <div className={styles.sectionHeader}>
@@ -201,7 +248,7 @@ export default function Dashboard() {
                   label="Gender" name="Gender" value={formData.Gender} onChange={handleChange}
                   options={[{ value: 'Male', label: 'Male' }, { value: 'Female', label: 'Female' }]} 
                 />
-                <PremiumInput label="Family Income (LPA)" name="Family_Income" type="number" value={formData.Family_Income} onChange={handleChange} required />
+                <PremiumInput label="Family Income (LPA)" name="Family_Income" type="number" step="0.1" min="0" max="200" value={formData.Family_Income} onChange={handleChange} required />
                 <PremiumSelect 
                   label="Home State" name="State" value={formData.State} onChange={handleChange}
                   options={[
@@ -217,7 +264,7 @@ export default function Dashboard() {
                     { value: 'Kerala', label: 'Kerala' },
                   ]} 
                 />
-                <PremiumInput label="Gap Years" name="Gap_Year" type="number" value={formData.Gap_Year} onChange={handleChange} required />
+                <PremiumInput label="Gap Years" name="Gap_Year" type="number" min="0" max="5" step="1" value={formData.Gap_Year} onChange={handleChange} required />
               </div>
 
               <div className={styles.submitArea}>
@@ -249,7 +296,7 @@ export default function Dashboard() {
               <GlassCard className={styles.mainResultCard}>
                 <div className={styles.gaugeHeader}>
                   <h3>Predicted Admission Chance</h3>
-                  <span className={`${styles.badge} ${styles['badge' + prediction.confidence_level]}`}>
+                  <span className={`${styles.badge} ${styles['badge' + prediction.confidence_level] || styles.badgeMedium}`}>
                     {prediction.confidence_level} Confidence
                   </span>
                 </div>

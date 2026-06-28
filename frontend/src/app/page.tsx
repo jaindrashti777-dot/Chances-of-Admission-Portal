@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { GraduationCap, ArrowRight } from 'lucide-react';
+import { ArrowRight, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { motion } from 'framer-motion';
 import styles from './LandingPage.module.css';
@@ -15,48 +15,47 @@ export default function Home() {
           <div className={styles.logoIcon}>
             <GraduationCap size={24} color="white" />
           </div>
-          AdmissionAI
+          Admission Predictor
         </div>
-        <div>
-          <Link href="/dashboard">
-            <Button variant="ghost">Sign In</Button>
-          </Link>
-          <Link href="/dashboard">
-            <Button variant="primary">Get Started</Button>
-          </Link>
-        </div>
+        <Link href="/dashboard">
+          <Button variant="primary">Open Dashboard</Button>
+        </Link>
       </nav>
 
       <main className={styles.main}>
-        <motion.div 
+        <motion.div
           className={styles.badge}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          v2.0 • Now powered by Advanced Machine Learning
+          Portfolio Project | End-to-End ML System
         </motion.div>
 
-        <motion.h1 
+        <motion.h1
           className={styles.title}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          Predict Your Future.<br/>
-          <span className={styles.highlight}>Analyze Your Profile.</span>
+          College Admission
+          <br />
+          <span className={styles.highlight}>Prediction System</span>
         </motion.h1>
 
-        <motion.p 
+        <motion.p
           className={styles.description}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          Explore this machine learning portfolio project demonstrating end-to-end data pipelines, custom SHAP explainability, and a modern Next.js architecture using a synthetic admissions dataset.
+          A full-stack machine learning application demonstrating data pipelines,
+          model training, FastAPI inference, validation, SHAP-ready explanations,
+          and a typed Next.js dashboard. The model is trained on synthetic data and
+          is not intended for real admissions decisions.
         </motion.p>
 
-        <motion.div 
+        <motion.div
           className={styles.actions}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -69,25 +68,35 @@ export default function Home() {
           </Link>
           <Link href="/dashboard/about">
             <Button variant="outline" size="lg">
-              View the Methodology
+              View Methodology
             </Button>
           </Link>
         </motion.div>
 
-        <motion.div 
-          className={styles.heroImage}
+        <motion.div
+          className={styles.highlights}
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
         >
-          <div className={styles.mockupHeader}>
-            <div className={styles.dot} />
-            <div className={styles.dot} />
-            <div className={styles.dot} />
+          <div className={styles.highlightItem}>
+            <span className={styles.highlightValue}>16</span>
+            <span className={styles.highlightLabel}>Input Features</span>
           </div>
-          <div className={styles.mockupContent}>
-            <div className={styles.mockupGraphic} />
-            {/* We could place an actual screenshot image here later using next/image */}
+          <div className={styles.highlightDivider} />
+          <div className={styles.highlightItem}>
+            <span className={styles.highlightValue}>7</span>
+            <span className={styles.highlightLabel}>Models Compared</span>
+          </div>
+          <div className={styles.highlightDivider} />
+          <div className={styles.highlightItem}>
+            <span className={styles.highlightValue}>Pydantic</span>
+            <span className={styles.highlightLabel}>Validation</span>
+          </div>
+          <div className={styles.highlightDivider} />
+          <div className={styles.highlightItem}>
+            <span className={styles.highlightValue}>FastAPI</span>
+            <span className={styles.highlightLabel}>Inference API</span>
           </div>
         </motion.div>
       </main>

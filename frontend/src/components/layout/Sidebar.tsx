@@ -6,13 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { 
   LayoutDashboard, 
-  History, 
-  GitCompare, 
-  LineChart, 
-  Lightbulb,
   GraduationCap,
-  Building,
-  Settings,
   Info,
   Moon,
   Sun
@@ -20,16 +14,8 @@ import {
 import styles from './Sidebar.module.css';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={20} /> },
-  { label: 'Prediction History', href: '/dashboard/history', icon: <History size={20} /> },
-  { label: 'Compare Profiles', href: '/dashboard/compare', icon: <LineChart size={20} /> },
-  { label: 'Insights', href: '/dashboard/insights', icon: <Lightbulb size={20} /> },
-  { label: 'Colleges Explorer', href: '/dashboard/explorer', icon: <GraduationCap size={20} /> },
-];
-
-const BOTTOM_ITEMS = [
+  { label: 'Predictor', href: '/dashboard', icon: <LayoutDashboard size={20} /> },
   { label: 'About the Model', href: '/dashboard/about', icon: <Info size={20} /> },
-  { label: 'Settings', href: '/dashboard/settings', icon: <Settings size={20} /> },
 ];
 
 export function Sidebar() {
@@ -38,6 +24,7 @@ export function Sidebar() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -47,7 +34,7 @@ export function Sidebar() {
         <div className={styles.logoIcon}>
           <GraduationCap size={24} color="white" />
         </div>
-        <span className={styles.logoText}>AdmissionAI</span>
+        <span className={styles.logoText}>Admission Predictor</span>
       </div>
 
       <nav className={styles.nav}>
@@ -69,22 +56,6 @@ export function Sidebar() {
       </nav>
 
       <div className={styles.bottomSection}>
-        <div className={styles.navGroup}>
-          {BOTTOM_ITEMS.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link 
-                key={item.href} 
-                href={item.href}
-                className={`${styles.navItem} ${isActive ? styles.active : ''}`}
-              >
-                <span className={styles.icon}>{item.icon}</span>
-                <span className={styles.label}>{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-
         <div 
           className={styles.themeToggle} 
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}

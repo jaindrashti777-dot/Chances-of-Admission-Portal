@@ -1,61 +1,83 @@
-"""
-FastAPI Application — Admission Prediction API
-
-Endpoints:
-    GET  /health  — Health check
-    POST /predict — Predict admission chance
-
-Usage:
-    uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
-
-Docs:
-    http://localhost:8000/docs  (Swagger UI)
-    http://localhost:8000/redoc (ReDoc)
-"""
+"""FastAPI application for the admission prediction demo."""
 
 from __future__ import annotations
 
-import logging
 import sys
 from pathlib import Path
 from typing import Literal
 
-# Resolve project root for imports
+# Resolve project root for imports when the app is started from Docker/Render.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+import os
 
-logger = logging.getLogger(__name__)
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
+from starlette import status
+
+from src.config import load_config, resolve_path
+from src.logger import get_logger
+
+logger = get_logger(__name__)
+API_VERSION = "1.0.0"
 
 app = FastAPI(
     title="Admission Prediction API",
     description=(
-        "Predict the probability of a student getting college admission in India "
-        "based on 16 academic and demographic features."
+        "Demonstration API for a synthetic college admission prediction model. "
+        "The service showcases ML inference, validation, explainability-ready output, "
+        "and deployment patterns."
     ),
-    version="1.0.0",
+    version=API_VERSION,
     docs_url="/docs",
     redoc_url="/redoc",
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+origins_env = os.environ.get("CORS_ORIGINS")
+if origins_env:
+    allowed_origins = [
+        origin.strip() for origin in origins_env.split(",") if origin.strip()
+    ]
+else:
+    allowed_origins = [
         "http://localhost:3000",
         "https://chances-of-admission-portal.vercel.app",
-    ],
+    ]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# ==============================================================================
-# Pydantic models (input validation built-in)
-# ==============================================================================
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
+    """Return compact validation errors that frontend clients can display."""
+    errors = [
+        {
+            "field": ".".join(str(part) for part in error["loc"] if part != "body"),
+            "message": error["msg"],
+            "type": error["type"],
+        }
+        for error in exc.errors()
+    ]
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "error": "validation_error",
+            "message": "Request payload failed validation.",
+            "details": errors,
+        },
+    )
 
 
 class AdmissionInput(BaseModel):
@@ -70,7 +92,7 @@ class AdmissionInput(BaseModel):
     JEE_Percentile: float = Field(..., ge=0, le=100, description="JEE exam percentile")
     CUET_Score: float = Field(..., ge=0, le=800, description="CUET exam score")
     Category: Literal["General", "OBC", "SC", "ST", "EWS"] = Field(
-        ..., description="Category: General, OBC, SC, ST, EWS"
+        ..., description="Reservation category"
     )
     State: Literal[
         "Maharashtra",
@@ -85,14 +107,16 @@ class AdmissionInput(BaseModel):
         "Kerala",
     ] = Field(..., description="Home state")
     Family_Income: float = Field(
-        ..., ge=0, le=200, description="Family income in Lakhs/year"
+        ..., ge=0, le=200, description="Family income in lakhs per year"
     )
-    Gender: Literal["Male", "Female"] = Field(..., description="Gender: Male or Female")
+    Gender: Literal["Male", "Female"] = Field(..., description="Gender")
     Gap_Year: int = Field(..., ge=0, le=5, description="Number of gap years")
     CGPA: float = Field(..., ge=0, le=10, description="Current CGPA")
-    Backlogs: int = Field(..., ge=0, le=50, description="Number of backlogs")
+    Backlogs: int = Field(
+        ..., ge=0, le=50, description="Number of active or historical backlogs"
+    )
     Extracurricular: int = Field(
-        ..., ge=0, le=1, description="Extracurricular activities (0 or 1)"
+        ..., ge=0, le=1, description="Extracurricular activity flag"
     )
     Research_Paper: int = Field(
         ..., ge=0, le=20, description="Number of research papers"
@@ -100,9 +124,9 @@ class AdmissionInput(BaseModel):
     Internship: int = Field(..., ge=0, le=10, description="Number of internships")
     Desired_Branch: Literal[
         "CSE", "ECE", "ME", "CE", "EE", "IT", "Chemical", "Biotech"
-    ] = Field(..., description="Branch: CSE, ECE, ME, CE, EE, IT, Chemical, Biotech")
+    ] = Field(..., description="Desired engineering branch")
     College_Tier: Literal["Tier_1", "Tier_2", "Tier_3"] = Field(
-        ..., description="College tier: Tier_1, Tier_2, Tier_3"
+        ..., description="Target college tier"
     )
 
     model_config = {
@@ -135,20 +159,19 @@ class PredictionOutput(BaseModel):
     """Output schema for admission prediction."""
 
     admission_chance: float = Field(
-        ..., description="Predicted admission probability (0-1)"
+        ..., ge=0, le=1, description="Predicted probability from 0 to 1"
     )
     admission_percentage: str = Field(
-        ..., description="Admission chance as percentage string"
+        ..., description="Admission chance as a percentage string"
     )
-    confidence_level: str = Field(
-        ..., description="Confidence level: High, Medium, or Low"
+    confidence_level: Literal["High", "Medium", "Low"] = Field(
+        ..., description="Band derived from prediction"
     )
     resume_score: int = Field(
-        ..., description="Calculated profile readiness score out of 100"
+        ..., ge=0, le=100, description="Heuristic profile readiness score"
     )
-    top_factors: list[dict] = Field(
-        default_factory=list,
-        description="Top contributing factors (SHAP-based)",
+    top_factors: list[dict[str, float | str]] = Field(
+        default_factory=list, description="Top SHAP factors"
     )
     timestamp: str = Field(..., description="Prediction timestamp")
 
@@ -158,93 +181,83 @@ class HealthResponse(BaseModel):
 
     status: str
     model_loaded: bool
+    model_available: bool
     version: str
 
-
-# ==============================================================================
-# Model loading (lazy, cached)
-# ==============================================================================
 
 _pipeline = None
 
 
+def get_pipeline_path() -> Path:
+    """Resolve the configured pipeline artifact path."""
+    config = load_config()
+    return resolve_path(
+        config.get("model_paths", {}).get("pipeline", "models/pipeline.pkl")
+    )
+
+
 def get_pipeline():
-    """Load or return cached pipeline."""
+    """Load or return the cached pipeline."""
     global _pipeline
     if _pipeline is None:
         try:
             from src.predict import load_pipeline
 
             _pipeline = load_pipeline()
-        except Exception as e:
+        except Exception as exc:
+            logger.exception("Model pipeline failed to load")
             raise HTTPException(
                 status_code=503,
-                detail=f"Model not available. Run training first. Error: {e}",
-            )
+                detail={
+                    "error": "model_unavailable",
+                    "message": "Model artifact could not be loaded.",
+                    "detail": str(exc),
+                },
+            ) from exc
     return _pipeline
-
-
-# ==============================================================================
-# Endpoints
-# ==============================================================================
 
 
 @app.get("/health", response_model=HealthResponse, tags=["System"])
 def health_check():
-    """Check API health and model availability."""
-    model_loaded = False
-    try:
-        get_pipeline()
-        model_loaded = True
-    except HTTPException:
-        pass
-
+    """Return service health without forcing model deserialization."""
     return HealthResponse(
         status="healthy",
-        model_loaded=model_loaded,
-        version="1.0.0",
+        model_loaded=_pipeline is not None,
+        model_available=get_pipeline_path().exists(),
+        version=API_VERSION,
     )
 
 
 @app.post("/predict", response_model=PredictionOutput, tags=["Prediction"])
 def predict(input_data: AdmissionInput):
-    """
-    Predict admission chance for a student.
-
-    Accepts 16 features and returns the predicted admission probability
-    along with confidence level and top contributing factors.
-    """
+    """Predict admission chance for one synthetic profile."""
     pipeline = get_pipeline()
 
     try:
+        import pandas as pd
+
+        from src.explain import explain_prediction
+        from src.pipeline_builder import get_feature_names_from_pipeline
         from src.predict import predict_admission
 
         input_dict = input_data.model_dump()
         result = predict_admission(input_dict, pipeline=pipeline)
 
-        # Try to get SHAP factors
-        top_factors = []
+        top_factors: list[dict[str, float | str]] = []
         try:
-            import pandas as pd
-
-            from src.explain import explain_prediction
-            from src.pipeline_builder import get_feature_names_from_pipeline
-
             input_df = pd.DataFrame([input_dict])
             preprocessor = pipeline.named_steps["preprocessor"]
             X_transformed = preprocessor.transform(input_df)
             feature_names = get_feature_names_from_pipeline(pipeline)
             model = pipeline.named_steps["model"]
-
             contributions = explain_prediction(model, X_transformed, feature_names)
             top_factors = [
-                {"feature": k, "contribution": v}
-                for k, v in list(contributions.items())[:5]
+                {"feature": feature, "contribution": contribution}
+                for feature, contribution in list(contributions.items())[:5]
             ]
-        except Exception as e:
-            logger.info("SHAP explanation unavailable: %s", e)
+        except Exception as exc:
+            logger.info("SHAP explanation unavailable: %s", exc)
 
-        # Compute Resume Score mock
         academics_score = (
             input_dict["Tenth_Percentage"]
             + input_dict["Twelfth_Percentage"]
@@ -269,20 +282,33 @@ def predict(input_data: AdmissionInput):
             timestamp=result["timestamp"],
         )
 
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "error": "validation_error",
+                "message": "Prediction input failed domain validation.",
+                "detail": str(exc),
+            },
+        ) from exc
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Prediction failed")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "prediction_failed",
+                "message": "Prediction failed while processing the request.",
+                "detail": str(exc),
+            },
+        ) from exc
 
 
 @app.get("/metrics", tags=["System"])
 def metrics():
-    """
-    Retrieve basic system and model usage metrics.
-    """
+    """Retrieve basic API usage metrics from the local prediction log."""
     import pandas as pd
-
-    from src.config import load_config, resolve_path
 
     config = load_config()
     log_path = resolve_path(
@@ -298,30 +324,32 @@ def metrics():
             total_predictions = len(df)
             if total_predictions > 0 and "prediction" in df.columns:
                 average_prediction = round(float(df["prediction"].mean()), 4)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("Failed to read prediction metrics: %s", exc)
 
     return {
         "total_predictions_served": total_predictions,
         "average_admission_chance_predicted": average_prediction,
-        "model_version": "1.0.0",
+        "model_version": API_VERSION,
         "status": "active",
     }
 
 
 @app.get("/", tags=["System"])
 def root():
-    """API root — redirects to documentation."""
+    """Return API metadata."""
     return {
         "message": "Admission Prediction API",
+        "scope": "Synthetic-data portfolio demonstration; not for real admissions decisions.",
         "docs": "/docs",
+        "health": "/health",
         "predict": "POST /predict",
     }
 
 
-@app.get("/api/colleges", tags=["Mock Data"])
+@app.get("/api/colleges", tags=["Reference Data"])
 def get_colleges():
-    """Mock database of engineering colleges."""
+    """Return a small static college list used by the demo UI."""
     return [
         {
             "name": "IIT Bombay",
@@ -391,22 +419,23 @@ def get_colleges():
 
 
 class ChatMessage(BaseModel):
-    message: str
+    """Request schema for the rule-based advisor."""
+
+    message: str = Field(..., min_length=1, max_length=500)
 
 
-@app.post("/api/chat", tags=["Mock Data"])
+@app.post("/api/chat", tags=["Advisor"])
 def chat(payload: ChatMessage):
-    """Mock AI Chat Assistant response."""
+    """Return deterministic profile guidance for the demo UI."""
     user_msg = payload.message.lower()
     if "improve" in user_msg or "cgpa" in user_msg:
         return {
-            "response": "Improving your CGPA is one of the best ways to increase your admission chances. Even a 0.5 increase can bump your probability by up to 10% for Tier 1 colleges."
+            "response": "For this synthetic model, CGPA is usually an influential input. Try adjusting CGPA in the form to see how the predicted score changes."
         }
-    elif "backlog" in user_msg:
+    if "backlog" in user_msg:
         return {
-            "response": "Backlogs heavily penalize your profile. If you have any active backlogs, clearing them should be your #1 priority."
+            "response": "Backlogs reduce the synthetic readiness score and can lower the prediction. The app treats fewer active backlogs as a stronger profile signal."
         }
-    else:
-        return {
-            "response": "I'm the Admission AI assistant! I can help you understand your profile strengths and suggest improvements based on the ML model's data. Try asking about your CGPA or backlogs!"
-        }
+    return {
+        "response": "This is a rule-based demo helper. It can explain how fields like CGPA, backlogs, internships, and research papers affect this synthetic model."
+    }

@@ -1,7 +1,7 @@
 """
 sklearn Pipeline and ColumnTransformer builder.
 
-Creates a production-grade ML pipeline that chains preprocessing and
+Creates a reproducible ML pipeline that chains preprocessing and
 model training into a single reproducible object.
 """
 
@@ -21,10 +21,10 @@ def build_preprocessor() -> ColumnTransformer:
     """
     Build a ColumnTransformer that handles all feature types.
 
-    - Numerical features → StandardScaler
-    - Categorical features → OneHotEncoder (handle_unknown='ignore')
-    - Ordinal features → OrdinalEncoder (Tier_3 < Tier_2 < Tier_1)
-    - Binary features → passed through as-is
+    - Numerical features -> StandardScaler
+    - Categorical features -> OneHotEncoder (handle_unknown='ignore')
+    - Ordinal features -> OrdinalEncoder (Tier_3 < Tier_2 < Tier_1)
+    - Binary features -> passed through as-is
 
     Returns
     -------
@@ -86,7 +86,7 @@ def build_preprocessor() -> ColumnTransformer:
 
 def build_full_pipeline(model, preprocessor: ColumnTransformer | None = None):
     """
-    Build a complete Pipeline: preprocessor → model.
+    Build a complete Pipeline: preprocessor -> model.
 
     Parameters
     ----------
@@ -111,7 +111,7 @@ def build_full_pipeline(model, preprocessor: ColumnTransformer | None = None):
     )
 
     model_name = type(model).__name__
-    logger.info(f"Full pipeline built: Preprocessor → {model_name}")
+    logger.info(f"Full pipeline built: Preprocessor -> {model_name}")
     return pipeline
 
 

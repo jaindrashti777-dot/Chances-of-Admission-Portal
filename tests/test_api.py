@@ -18,6 +18,24 @@ def test_health_endpoint():
     data = response.json()
     assert data["status"] == "healthy"
     assert "model_loaded" in data
+    assert "model_available" in data
+
+
+def test_root_endpoint():
+    response = client.get("/")
+    assert response.status_code == 200
+    data = response.json()
+    assert "predict" in data
+    assert "docs" in data
+    assert "scope" in data
+
+
+def test_metrics_endpoint():
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    data = response.json()
+    assert "total_predictions_served" in data
+    assert "status" in data
 
 
 @pytest.fixture
@@ -66,8 +84,42 @@ def test_predict_endpoint_success(valid_payload):
             assert data["top_factors"] == []  # Since we mocked SHAP exception
 
 
-def test_predict_endpoint_validation_error(valid_payload):
+def test_predict_endpoint_validation_error_invalid_value(valid_payload):
     # Pass invalid CGPA
     valid_payload["CGPA"] = 15.0
     response = client.post("/predict", json=valid_payload)
     assert response.status_code == 422
+    data = response.json()
+    assert data["error"] == "validation_error"
+    assert any(err["field"] == "CGPA" for err in data["details"])
+
+
+def test_predict_endpoint_validation_error_missing_field(valid_payload):
+    # Remove a required field
+    del valid_payload["CGPA"]
+    response = client.post("/predict", json=valid_payload)
+    assert response.status_code == 422
+    data = response.json()
+    assert data["error"] == "validation_error"
+    assert any(err["field"] == "CGPA" for err in data["details"])
+
+
+def test_predict_endpoint_validation_error_invalid_category(valid_payload):
+    # Pass an invalid category
+    valid_payload["Category"] = "Unknown"
+    response = client.post("/predict", json=valid_payload)
+    assert response.status_code == 422
+
+
+def test_model_artifact_is_available():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["model_available"] is True
+
+
+def test_chat_endpoint_success():
+    response = client.post(
+        "/api/chat", json={"message": "How do backlogs affect this?"}
+    )
+    assert response.status_code == 200
+    assert "response" in response.json()

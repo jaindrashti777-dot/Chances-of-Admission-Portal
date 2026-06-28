@@ -10,6 +10,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
+  gap: 1rem;
 }
 
 .title {
@@ -193,6 +194,7 @@
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--primary-indigo);
+  overflow-wrap: anywhere;
 }
 
 .shapCard {
@@ -210,4 +212,22 @@
   font-size: 0.875rem;
   color: var(--text-secondary);
   margin-bottom: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .gaugeHeader,
+  .scoreRow {
+    flex-direction: column;
+  }
+
+  .gaugeWrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
 }

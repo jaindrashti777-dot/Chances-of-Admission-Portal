@@ -1,140 +1,151 @@
-# College Admission Predictor (India) -- Production ML System
+# College Admission Predictor
 
-> **Disclaimer:** This is a **synthetic demonstration project** for portfolio
-> purposes. The dataset is generated from a deterministic formula, so the high
-> model accuracy (R^2 > 0.90) is expected and does not reflect real-world
-> admissions prediction performance. Do not use this system for actual
-> admissions decisions.
+An end-to-end machine learning portfolio project for a synthetic college admission prediction workflow. The repository includes offline data/model code, a FastAPI inference service, a Next.js dashboard, deployment configuration, and tests.
 
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
-![Python Version](https://img.shields.io/badge/python-3.12-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+This is not an admissions decision tool. The dataset is synthetic and the target is generated from a formula, so model scores demonstrate engineering workflow rather than real-world predictive validity.
 
-An end-to-end, production-grade machine learning system that predicts a
-student's probability of getting college admission in India based on 16
-academic and demographic features.
+## Engineering Highlights
 
----
-
-## Overview
-
-This project goes beyond a simple Jupyter Notebook and demonstrates a
-professional MLOps workflow. It includes:
-
-- **Production Pipelines:** Custom `sklearn.pipeline.Pipeline` with
-  `ColumnTransformer`.
-- **Hyperparameter Tuning:** Automated `RandomizedSearchCV` on the best
-  base model using grids defined in `config.yaml`.
-- **Explainable AI:** SHAP integration to show *why* a prediction was made.
-- **Robust Engineering:** Validation layers, structured logging, and full
-  exception handling.
-- **Dual Deployment:** A Streamlit dashboard and a FastAPI backend.
-- **DevOps:** Dockerized services, GitHub Actions CI/CD, and a `Makefile`
-  for developer ergonomics.
-
----
+- FastAPI inference service with Pydantic request validation and structured error responses.
+- Serialized scikit-learn pipeline loading for online prediction.
+- Typed Next.js form that calls the backend through `NEXT_PUBLIC_API_URL`.
+- SHAP-ready feature contribution output for explainability views.
+- Split deployment model: Vercel frontend and Render backend.
+- Lightweight Render API requirements separated from training/development dependencies.
+- Pytest coverage for health, prediction, validation, metrics, and model availability.
 
 ## Architecture
 
-The system is designed with a clear separation of concerns:
+```text
+Synthetic data generator
+        |
+Training pipeline: preprocessing, feature engineering, model comparison
+        |
+models/pipeline.pkl
+        |
+FastAPI backend on Render: /health, /predict, /metrics, /api/chat
+        |
+Next.js frontend on Vercel: dashboard, methodology page, rule-based helper
+```
 
-1. **Data Validation:** Strict input checking (`validator.py`).
-2. **Preprocessing:** Handling missing values, outliers, and data types
-   (`preprocessing.py`).
-3. **Modeling:** 7 regression models tracked via **MLflow**, best model
-   selected and tuned.
-4. **Inference:** Fast prediction with full history logging (`predict.py`).
+Additional notes are in `docs/architecture.md`.
 
-*(See `docs/architecture.md` for the full Mermaid diagram.)*
+## Tech Stack
 
----
+- Backend: Python 3.12, FastAPI, Pydantic, pandas, scikit-learn, SHAP
+- ML: scikit-learn pipelines, XGBoost/LightGBM training options, joblib artifacts
+- Frontend: Next.js App Router, TypeScript, CSS Modules, Recharts, lucide-react
+- Testing: pytest, FastAPI TestClient, ESLint, Next.js production build
+- Deployment: Docker, Render, Vercel
 
-## Quickstart
+## Local Setup
 
-### Prerequisites
+```bash
+git clone https://github.com/jaindrashti777-dot/Chances-of-Admission-Portal.git
+cd Chances-of-Admission-Portal
+python -m venv .venv
+.venv\Scripts\pip install -r requirements.txt
+```
 
-- Python 3.12+
-- (Optional) Docker & Docker Compose
-
-### Local Setup
-
-1. **Clone & Install**
-   ```bash
-   git clone https://github.com/username/Chance-of-Admission.git
-   cd Chance-of-Admission
-   make install
-   ```
-
-2. **Generate Data & Train Model**
-   ```bash
-   make generate   # Generates 5,000 synthetic records
-   make train      # Runs full pipeline, logs to MLflow, saves best model
-   ```
-
-3. **Run the Apps**
-   ```bash
-   make app        # Launches the Streamlit Dashboard
-   make api        # Launches the FastAPI server
-   ```
-
-### Docker Setup
-
-> **Important:** You must generate data and train a model *before* starting
-> Docker, because the containers mount `./models` from the host.
+The repository includes `models/pipeline.pkl`. To regenerate synthetic data and retrain:
 
 ```bash
 make generate
 make train
-make docker-up
 ```
 
-- Streamlit: http://localhost:8501
-- FastAPI Docs: http://localhost:8000/docs
+Run the backend:
 
----
+```bash
+make api
+```
 
-## Results & Model Comparison
+Run the frontend:
 
-7 models are trained and compared. Tree-based ensembles (XGBoost, LightGBM,
-RandomForest) typically perform best on this synthetic dataset.
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-| Model             | R2 Score | RMSE  |
-|-------------------|----------|-------|
-| LightGBM          | ~0.95    | ~0.02 |
-| XGBoost           | ~0.94    | ~0.02 |
-| Random Forest     | ~0.93    | ~0.03 |
-| Linear Regression | ~0.85    | ~0.06 |
+Open `http://localhost:3000`. The frontend defaults to `http://localhost:8000` when `NEXT_PUBLIC_API_URL` is unset.
 
-> **Note:** These metrics are on synthetic data generated from a known
-> formula. High R2 is expected and does not imply the model would generalise
-> to real admissions data.
+## Environment Variables
 
----
+Backend:
 
-## Limitations & Model Card
+```env
+PORT=8000
+CORS_ORIGINS=http://localhost:3000,https://chances-of-admission-portal.vercel.app
+```
 
-| Item                 | Detail                                                     |
-|----------------------|------------------------------------------------------------|
-| **Dataset**          | 5,000 synthetic records generated via a weighted formula   |
-| **Target**           | `Admission_Chance` (0--1), computed deterministically      |
-| **Feature count**    | 16 (10 numerical, 4 categorical, 1 ordinal, 1 binary)     |
-| **Known limitation** | Model learns the generating formula, not real patterns     |
-| **Intended use**     | Portfolio demonstration of MLOps skills                    |
-| **Not intended for** | Real admissions decisions or policy making                 |
-| **Fairness**         | Category/reservation boosts are baked into synthetic data  |
+Frontend:
 
----
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
 
-## Author & Resume Section
+For production, set `NEXT_PUBLIC_API_URL` in Vercel to the Render backend URL. Set `CORS_ORIGINS` in Render to include the Vercel production domain and localhost if needed for development.
 
-**Admission Chance Prediction System (End-to-End ML Project)**
-> Built a production-grade machine learning system using Python, Scikit-learn,
-> XGBoost, Streamlit, FastAPI, and Docker. Implemented preprocessing
-> pipelines with ColumnTransformer, hyperparameter tuning via
-> RandomizedSearchCV, SHAP explainability, unit and end-to-end testing,
-> MLflow experiment tracking, and deployment-ready architecture with an
-> interactive prediction dashboard. Dataset is synthetic (formula-generated).
+## API Examples
 
----
+Health:
 
-*License: MIT*
+```bash
+curl http://localhost:8000/health
+```
+
+Prediction:
+
+```bash
+curl -X POST http://localhost:8000/predict ^
+  -H "Content-Type: application/json" ^
+  -d "{\"Tenth_Percentage\":88.5,\"Twelfth_Percentage\":85,\"JEE_Percentile\":92.3,\"CUET_Score\":650,\"Category\":\"General\",\"State\":\"Maharashtra\",\"Family_Income\":12,\"Gender\":\"Male\",\"Gap_Year\":0,\"CGPA\":8.9,\"Backlogs\":0,\"Extracurricular\":1,\"Research_Paper\":1,\"Internship\":2,\"Desired_Branch\":\"CSE\",\"College_Tier\":\"Tier_1\"}"
+```
+
+Routes:
+
+- `GET /` - API metadata
+- `GET /health` - service health and model artifact availability
+- `POST /predict` - admission score for one synthetic profile
+- `GET /metrics` - local prediction log summary
+- `POST /api/chat` - rule-based demo helper
+
+## Deployment
+
+Render backend:
+
+1. Create a Render Web Service from this repository.
+2. Use the included `render.yaml` and Dockerfile.
+3. Health check path is `/health`.
+4. Ensure `models/pipeline.pkl` is present in the repo or generated before deployment.
+5. Set `CORS_ORIGINS` to the deployed Vercel URL.
+
+Vercel frontend:
+
+1. Import the repository into Vercel.
+2. Set the root directory to `frontend`.
+3. Set `NEXT_PUBLIC_API_URL` to the Render service URL.
+4. Deploy.
+
+## Testing
+
+```bash
+make test
+cd frontend
+npm run lint
+npm run build
+```
+
+## Limitations / Model Card
+
+- Dataset: synthetic, generated from configurable rules.
+- Target: `Admission_Chance`, a generated value between 0 and 1.
+- Intended use: demonstrate ML engineering, API integration, validation, deployment, and explainability patterns.
+- Not intended for: real admissions decisions, counseling, ranking applicants, or policy analysis.
+- Known limitation: high offline performance is expected because the model learns a synthetic generating process.
+- Resume readiness score: transparent heuristic used for UI context, not a trained model output.
+
+## License
+
+MIT
