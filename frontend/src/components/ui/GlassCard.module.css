@@ -1,0 +1,25 @@
+.card {
+  border-radius: var(--radius-xl);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.padding-none {
+  padding: 0;
+}
+
+.padding-sm {
+  padding: 1rem;
+}
+
+.padding-md {
+  padding: 1.5rem;
+}
+
+.padding-lg {
+  padding: 2rem;
+}
