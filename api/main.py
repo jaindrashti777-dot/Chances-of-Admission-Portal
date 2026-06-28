@@ -242,10 +242,19 @@ def predict(input_data: AdmissionInput):
             logger.info("SHAP explanation unavailable: %s", e)
 
         # Compute Resume Score mock
-        academics_score = (input_dict["Tenth_Percentage"] + input_dict["Twelfth_Percentage"] + (input_dict["CGPA"] * 10)) / 3
-        extracurricular_score = min(100, (input_dict["Extracurricular"] * 20) + (input_dict["Research_Paper"] * 10) + (input_dict["Internship"] * 10))
+        academics_score = (
+            input_dict["Tenth_Percentage"]
+            + input_dict["Twelfth_Percentage"]
+            + (input_dict["CGPA"] * 10)
+        ) / 3
+        extracurricular_score = min(
+            100,
+            (input_dict["Extracurricular"] * 20)
+            + (input_dict["Research_Paper"] * 10)
+            + (input_dict["Internship"] * 10),
+        )
         resume_score = (academics_score * 0.7) + (extracurricular_score * 0.3)
-        resume_score -= (input_dict["Backlogs"] * 5)
+        resume_score -= input_dict["Backlogs"] * 5
         resume_score = max(0, min(100, resume_score))
 
         return PredictionOutput(
@@ -311,27 +320,90 @@ def root():
 def get_colleges():
     """Mock database of engineering colleges."""
     return [
-        {"name": "IIT Bombay", "branch": "CSE", "state": "Maharashtra", "tier": "Tier_1", "package": "25 LPA", "nirf": 3},
-        {"name": "NIT Trichy", "branch": "CSE", "state": "Tamil Nadu", "tier": "Tier_1", "package": "15 LPA", "nirf": 9},
-        {"name": "BITS Pilani", "branch": "CSE", "state": "Rajasthan", "tier": "Tier_1", "package": "20 LPA", "nirf": 20},
-        {"name": "COEP Pune", "branch": "Computer", "state": "Maharashtra", "tier": "Tier_2", "package": "10 LPA", "nirf": 73},
-        {"name": "VJTI Mumbai", "branch": "IT", "state": "Maharashtra", "tier": "Tier_2", "package": "9 LPA", "nirf": 84},
-        {"name": "VIT Vellore", "branch": "CSE", "state": "Tamil Nadu", "tier": "Tier_2", "package": "8 LPA", "nirf": 11},
-        {"name": "SRM Chennai", "branch": "CSE", "state": "Tamil Nadu", "tier": "Tier_3", "package": "5 LPA", "nirf": 24},
-        {"name": "Amity University", "branch": "CSE", "state": "Delhi", "tier": "Tier_3", "package": "4 LPA", "nirf": 31},
+        {
+            "name": "IIT Bombay",
+            "branch": "CSE",
+            "state": "Maharashtra",
+            "tier": "Tier_1",
+            "package": "25 LPA",
+            "nirf": 3,
+        },
+        {
+            "name": "NIT Trichy",
+            "branch": "CSE",
+            "state": "Tamil Nadu",
+            "tier": "Tier_1",
+            "package": "15 LPA",
+            "nirf": 9,
+        },
+        {
+            "name": "BITS Pilani",
+            "branch": "CSE",
+            "state": "Rajasthan",
+            "tier": "Tier_1",
+            "package": "20 LPA",
+            "nirf": 20,
+        },
+        {
+            "name": "COEP Pune",
+            "branch": "Computer",
+            "state": "Maharashtra",
+            "tier": "Tier_2",
+            "package": "10 LPA",
+            "nirf": 73,
+        },
+        {
+            "name": "VJTI Mumbai",
+            "branch": "IT",
+            "state": "Maharashtra",
+            "tier": "Tier_2",
+            "package": "9 LPA",
+            "nirf": 84,
+        },
+        {
+            "name": "VIT Vellore",
+            "branch": "CSE",
+            "state": "Tamil Nadu",
+            "tier": "Tier_2",
+            "package": "8 LPA",
+            "nirf": 11,
+        },
+        {
+            "name": "SRM Chennai",
+            "branch": "CSE",
+            "state": "Tamil Nadu",
+            "tier": "Tier_3",
+            "package": "5 LPA",
+            "nirf": 24,
+        },
+        {
+            "name": "Amity University",
+            "branch": "CSE",
+            "state": "Delhi",
+            "tier": "Tier_3",
+            "package": "4 LPA",
+            "nirf": 31,
+        },
     ]
 
 
 class ChatMessage(BaseModel):
     message: str
 
+
 @app.post("/api/chat", tags=["Mock Data"])
 def chat(payload: ChatMessage):
     """Mock AI Chat Assistant response."""
     user_msg = payload.message.lower()
     if "improve" in user_msg or "cgpa" in user_msg:
-        return {"response": "Improving your CGPA is one of the best ways to increase your admission chances. Even a 0.5 increase can bump your probability by up to 10% for Tier 1 colleges."}
+        return {
+            "response": "Improving your CGPA is one of the best ways to increase your admission chances. Even a 0.5 increase can bump your probability by up to 10% for Tier 1 colleges."
+        }
     elif "backlog" in user_msg:
-        return {"response": "Backlogs heavily penalize your profile. If you have any active backlogs, clearing them should be your #1 priority."}
+        return {
+            "response": "Backlogs heavily penalize your profile. If you have any active backlogs, clearing them should be your #1 priority."
+        }
     else:
-        return {"response": "I'm the Admission AI assistant! I can help you understand your profile strengths and suggest improvements based on the ML model's data. Try asking about your CGPA or backlogs!"}
+        return {
+            "response": "I'm the Admission AI assistant! I can help you understand your profile strengths and suggest improvements based on the ML model's data. Try asking about your CGPA or backlogs!"
+        }
