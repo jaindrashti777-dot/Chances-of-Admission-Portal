@@ -48,3 +48,5 @@ reports/predictions.csv
 
 # Environment variables
 .env
+
+.pytest_temp/
